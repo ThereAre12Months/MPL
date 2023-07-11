@@ -1,0 +1,91 @@
+############################
+### VARIABLE DECLERATION ###
+############################
+
+TYPE	NAME	VALUE
+
+let 	age 	25; 			# standard 64b integer
+let	    pi	f3.1415926;		# standard 64b float
+let	    days	e365.249;		# an exact ratio
+let	    name	"Jeffrey Bezos";	# standard string
+let	    names	["Jeffrey", "Jake", "Johnson"]; # standard list of changing length		
+
+# this does not exist (yet)
+# lnk	tau	pi*2;			# variable gets auto-updated eg. when pi changes tau changes too
+
+code	hello_world = { print("Hello world"); }; # a code block, executes code inside block when called eg. hello_world() -output> "Hello world"
+
+################
+### COMMENTS ###
+################
+
+in-line comments: use ~
+eg. print("")
+
+##########################
+### IF-ELSE STATEMENTS ###
+##########################
+
+if (some_statement){
+
+    execute_some_code();
+
+} else {
+    
+    other_code();    
+
+}
+
+############################
+### FUNCTION DECLARATION ###
+############################
+
+fn NAME ARGS CODEBLOCK
+
+fn greeting(name) 
+{
+    out("Hello, " + name + "!");
+    str temp in("Do you know what temperature it is outside? ");
+    int temp as(temp, "int");
+    
+    if (temp > 30) {
+	print("That's really hot! We better stay inside with the A/C");
+    } else {
+	print("Let's go to the park!");
+    }
+
+    return temp;
+}
+
+########################
+### FUNCTION CALLING ###
+########################
+
+function_name(arg1, arg2, arg3);
+
+str val function_that_returns();
+
+#############
+### MACRO ###
+#############
+
+macro's are just function that are called with an ! operator before the function name:
+eg. !some_function();
+
+in the compiler the macro gets replaced by the code of the function.
+
+####################
+### EXAMPLE CODE ###
+####################
+
+fibonacci-----------
+
+fn fib(depth, a, b)
+{
+    if (depth < 0) {return a;}
+    int i b;
+    int j a+b;
+    return fib(depth-1);
+}
+
+print(fib(15, 0, 1));
