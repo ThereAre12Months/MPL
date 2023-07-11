@@ -1,2 +1,8 @@
-FN sayYourName §1 §4
-CALL sayYourName §1
+STR: What's your name?\n
+BRACKETS: ()
+BRACKETS: ( $0 )
+BRACKETS: (name)
+CODE: ['FNTOVAR input $2 name', 'CALL print $3']
+__________START_OF_CODE__________
+FN sayYourName $1 $4
+CALL sayYourName $1

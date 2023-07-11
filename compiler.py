@@ -59,11 +59,13 @@ def read_src(path):
     with open(path, "r") as f:
         return f.read()
 
-def write_compiled(bc, path):
+def write_compiled(consts, bc, path):
     splittedPath = splitPath(path)
     basePath = os.path.join(*splittedPath[:-1])
     fileName = splittedPath[-1].replace(".mpl", ".mplc")
-    file = "\n".join(bc)
+    file = "\n".join([str(c) for c in consts])
+    file += "\n" + "_"*10 + "START_OF_CODE" + "_"*10 + "\n"
+    file += "\n".join(bc)
 
     info(f"Writing to {os.path.join(basePath, 'build', fileName)}")
 
@@ -93,11 +95,11 @@ def find_str(src, const_count):
         if char == '"':
             if in_str:
                 if temp_str in strs:
-                    other += " §" + str(strs.index(temp_str) + const_count) + " "
+                    other += " $" + str(strs.index(temp_str) + const_count) + " "
                     temp_str = ""
                 else:
-                    other += " §" + str(count) + " "
-                    strs.append(temp_str)
+                    other += " $" + str(count) + " "
+                    strs.append("STR: " + str(temp_str))
                     temp_str = ""
                     count += 1
                 
@@ -127,7 +129,7 @@ def find_int(src, const_count):
     in_text = False
     for idx, char in enumerate(src):
         if char in [str(i) for i in range(10)]:
-            if src[idx-1] == "§":
+            if src[idx-1] == "$":
                 in_const = True
                 other += char
             elif not src[idx-1] in [str(i) for i in range(10)]+[" ", ",", "(", ")"]:
@@ -142,8 +144,8 @@ def find_int(src, const_count):
 
         else:
             if not temp_int == "":
-                ints.append(int(temp_int))
-                other += " §" + str(count) + " "
+                ints.append("INT: " + str(temp_int))
+                other += " $" + str(count) + " "
                 count += 1
                 temp_int = ""
 
@@ -154,7 +156,7 @@ def find_int(src, const_count):
             other += char
 
     if not temp_int == "":
-        ints.append(int(temp_int))
+        ints.append("INT: " + str(temp_int))
 
     return other, ints
 
@@ -180,9 +182,9 @@ def find_float(src, const_count):
                 temp_flt += char 
             else:
                 if not temp_flt == "":
-                    flts.append(float(temp_flt))
+                    flts.append("FLOAT: " + str(temp_flt))
                     temp_flt = ""
-                    other += " §" + str(count) + " "
+                    other += " $" + str(count) + " "
                     count += 1
 
                 other += char
@@ -192,7 +194,7 @@ def find_float(src, const_count):
             other += char
 
     if not temp_flt == "":
-        flts.append(float(temp_flt))
+        flts.append("FLOAT: " + str(temp_flt))
 
     return other, flts
 
@@ -217,8 +219,8 @@ def find_array(src, const_count):
         start_pos = current_pos
 
         array = other[start_pos:end_pos+1]
-        arrays.append(array)
-        new = other.replace(array, " §" + str(count) + " ")
+        arrays.append("ARRAY: " + str(array))
+        new = other.replace(array, " $" + str(count) + " ")
         count += 1
 
         other = new
@@ -246,13 +248,16 @@ def find_brackets(src, const_count):
         start_pos = current_pos
 
         bracket = other[start_pos:end_pos+1]
-        brackets.append(bracket)
-        new = other.replace(bracket, " §" + str(count) + " ")
+        brackets.append("BRACKETS: " + str(bracket))
+        new = other.replace(bracket, " $" + str(count) + " ")
         count += 1
 
         other = new 
 
     return other, brackets
+
+def brackets_parser(bracket):
+    pass
 
 def find_codeblocks(src, const_count):
     if not ("{" in src and "}" in src):
@@ -270,9 +275,9 @@ def find_codeblocks(src, const_count):
         start_pos = current_pos
 
         block = other[start_pos:end_pos+1]
-        new = other.replace(block, " §" + str(count) + " ")
+        new = other.replace(block, " $" + str(count) + " ")
         block = toBytecode(trim_lines(split_source(block[1:-1])))
-        blocks.append(block)
+        blocks.append("CODE: " + str(block))
         count += 1
 
         other = new 
@@ -319,7 +324,7 @@ def splitPath(path):
     return p
 
 def is_reference(txt):
-    return "§" in txt[:2]
+    return "$" in txt[:2]
 
 def getLinePurpose(line):
     words = line.split()
@@ -478,7 +483,7 @@ def compile(path, ignore):
     succes("Converted all lines into bytecode!")
 
     info("Creating .mplc file from bytecode...")
-    write_compiled(bc, path)
+    write_compiled(constants, bc, path)
     succes("Succesfully created .mplc file from bytecode!")
 
 if __name__ == "__main__":
