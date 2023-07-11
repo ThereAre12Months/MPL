@@ -97,11 +97,19 @@ def getCode(src):
 
     return new_lines
 
+def executeLine(lines, consts, vars):
+    pass
+
 def interpret(path):
     src = read_src(path)
 
     constants = getConstants(src)
     code = getCode(src)
+
+    vars = {}
+
+    for l in code:
+        vars = executeLine(l, constants, vars)
 
 if __name__ == "__main__":
     import sys, argparse, os
