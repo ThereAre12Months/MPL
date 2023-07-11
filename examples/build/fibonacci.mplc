@@ -1,8 +1,4 @@
-SET name §0
-SET surname §1
-SET age §3
-SET pi §12
-SET myName §0
-SET time §4
-SET result §14
-SET empty §15
+SET a §0
+SET b §1
+SWITCH a b
+ADDTO b a

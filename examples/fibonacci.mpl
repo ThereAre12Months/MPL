@@ -1,13 +1,6 @@
-let name "Ruben";
-let surname "Driezen";
-let age 15;
+let a 0;
+let b 1;
 
-let pi f3.1415926;
+a <-> b;
 
-let myName "Ruben";
-
-let time 20;
-
-let result [[0, 1, 1, 2, 3, 5, 8], "some val"];
-
-let empty [];
+b += a;

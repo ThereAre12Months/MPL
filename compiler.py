@@ -40,7 +40,15 @@ def error(msg):
     if debug:
         print(bcolors.FAIL + "ERROR: " + str(msg) + bcolors.ENDC)
 
-    sys.exit()
+    if not ignore_warnings:
+        sys.exit()
+
+def progress(msg, percentage):
+    if debug:
+        if percentage == 100:
+            print(f"\r{bcolors.OKGREEN}{msg}{bcolors.ENDC}: 100% done!     ")
+        else:
+            print(f"\r{bcolors.OKGREEN}{msg}{bcolors.ENDC}: {round(percentage, 2)}% done!     ", end="")
 
 def read_src(path):
     with open(path, "r") as f:
@@ -257,25 +265,82 @@ def getLinePurpose(line):
         if words[0] == "let":
             return "variable creation"
         
+    if len(words) >= 2:
+        match words[1]:
+            case "=":
+                return "set variable"
+            case "+=":
+                return "add to variable"
+            case "-=":
+                return "subtract from variable"
+            case "*=":
+                return "multiply variable"
+            case "/=":
+                return "divide variable"
+            case "<->":
+                return "switch variables"
+            case _:
+                return "empty line"
+        
     return "empty line"
 
 def toBytecode(lines):
     bc = []
-    for line in lines:
+    for idx, line in enumerate(lines):
         purpose = getLinePurpose(line)
+        words = line.split()
 
         if purpose == "variable creation":
-            words = line.split()
             if len(words) < 3:
                 error("Variable needs name AND starting value!")
-            
-            bc.append(f"SET {words[1]} {words[2]}")
+            else:
+                bc.append(f"SET {words[1]} {words[2]}")
+
+        elif purpose == "set variable":
+            if len(words) < 3:
+                error("Cannot set a variable to no value!")
+            else:
+                bc.append(f"SET {words[0]} {words[2]}")
+
+        elif purpose == "add to variable":
+            if len(words) < 3:
+                error("Cannot add None to variable!")
+            else:
+                bc.append(f"ADDTO {words[0]} {words[2]}")
+
+        elif purpose == "subtract from variable":
+            if len(words) < 3:
+                error("Cannot subtract None from variable!")
+            else:
+                bc.append(f"SUBFROM {words[0]} {words[2]}")
+
+        elif purpose == "multiply variable":
+            if len(words) < 3:
+                error("Cannot multiply variable by None!")
+            else:
+                bc.append(f"MULBY {words[0]} {words[2]}")
+
+        elif purpose == "divide variable":
+            if len(words) < 3:
+                error("Cannot divide variable by None!")
+            else:
+                bc.append(f"DIVBY {words[0]} {words[2]}")
+
+        elif purpose == "switch variables":
+            if len(words) < 3:
+                error("Cannot switch variable by None!")
+            else:
+                bc.append(f"SWITCH {words[0]} {words[2]}")
 
         elif purpose == "empty line":
-            pass
+            if empty_lines: bc.append("NOP")
 
         else:
             error(f"Cannot interpret line {line}")
+
+        progress("Compiling to bytecode", idx*100/len(lines))
+
+    progress("Compiling to bytecode", 100)
 
     return bc
 
@@ -323,7 +388,7 @@ def compile(path, ignore):
 
 if __name__ == "__main__":
     import sys, argparse, os
-    global debug
+    global debug, ignore_warnings, empty_lines
     os.system("")
 
     if len(sys.argv) > 1:
@@ -334,6 +399,8 @@ if __name__ == "__main__":
         parser.add_argument("name", metavar="name", help="the path to the file to compile")
         parser.add_argument("-i", "--include", help="include extra files in the compiled build", type=str, nargs="+")
         parser.add_argument("-d", "--debug", help="gives debug information while compiling if active", action="store_true")
+        parser.add_argument("-e", "--emptylines", help="includes empty lines in final build", action="store_true")
+        parser.add_argument("-w", "--warnings", help="ignores warnings when set", action="store_true")
 
         args = parser.parse_args()
 
@@ -342,6 +409,11 @@ if __name__ == "__main__":
         if include == None:
             include = []
         debug = args.debug
+        ignore_warnings = args.warnings
+        empty_lines = args.emptylines
+
+        print(ignore_warnings)
+        print(empty_lines)
 
     else:
         file_path = input("Enter the path to the file that you want to compile.\n>")
@@ -352,5 +424,7 @@ if __name__ == "__main__":
                 include.append(input("Enter the path to the file that you want to include.\n>"))
                 more = input("Do you want to include more files? [y/n]\n>").lower() == "y"
         debug = input("Do you want debug information to display during compilation? [y/n]\n>").lower() == "y"
+        ignore_warnings = False
+        empty_lines = False
 
     compile(file_path, include)
