@@ -1,3 +1,7 @@
+class BuiltInFuncs:
+    def isBuiltin(funcname):
+        pass
+
 class bcolors:
     HEADER = "\033[95m"
     OKBLUE = "\033[94m"
@@ -97,8 +101,16 @@ def getCode(src):
 
     return new_lines
 
-def executeLine(lines, consts, vars):
-    pass
+def executeLine(line, consts, vars):
+    words = line.split()
+
+    match words[0]:
+        case "FN":
+            vars.update({words[1]: [words[2], words[3]]})
+
+        case "CALL":
+            pass
+
 
 def interpret(path):
     src = read_src(path)
