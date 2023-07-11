@@ -40,9 +40,32 @@ def error(msg):
     if debug:
         print(bcolors.FAIL + "ERROR: " + str(msg) + bcolors.ENDC)
 
+    sys.exit()
+
 def read_src(path):
     with open(path, "r") as f:
         return f.read()
+
+def write_compiled(bc, path):
+    splittedPath = splitPath(path)
+    basePath = os.path.join(*splittedPath[:-1])
+    fileName = splittedPath[-1].replace(".mpl", ".mplc")
+    file = "\n".join(bc)
+
+    info(f"Writing to {os.path.join(basePath, 'build', fileName)}")
+
+    if os.path.exists(os.path.join(basePath, "build")):
+        if os.path.exists(os.path.join(basePath, "build", fileName)):
+            with open(os.path.join(basePath, "build", fileName), "w") as f:
+                f.write(file)
+        else:
+            with open(os.path.join(basePath, "build", fileName), "x") as f:
+                f.write(file)
+
+    else:
+        os.mkdir(os.path.join(basePath, "build"))
+        with open(os.path.join(basePath, "build", fileName), "x") as f:
+            f.write(file)
 
 def find_str(src, const_count):
     if not '"' in src:
@@ -208,19 +231,55 @@ def trim_lines(lines):
     new_lines = []
     for l in lines:
         new_l = l
-        while len(new_l) > 0 and new_l[0] == " ":
+        while len(new_l) > 0 and new_l[0] in [" ", "\t", "\n"]:
             new_l = new_l[1:]
 
-        while len(new_l) > 0 and new_l[-1] == " ":
+        while len(new_l) > 0 and new_l[-1] in [" ", "\t", "\n"]:
             new_l = new_l[:-1]
 
         new_lines.append(new_l)
     return new_lines
 
-def bytecode(lines):
-    pass
+def splitPath(path):
+    p = []
+    t = ""
+    for char in path:
+        if char in [os.path.sep, "/"]:
+            if not t == "": p.append(t); t = ""
+        else:
+            t += char
+    if not t == "": p.append(t)
+    return p
 
-def compile(path, ignore, debug):
+def getLinePurpose(line):
+    words = line.split()
+    if len(words) >= 1:
+        if words[0] == "let":
+            return "variable creation"
+        
+    return "empty line"
+
+def toBytecode(lines):
+    bc = []
+    for line in lines:
+        purpose = getLinePurpose(line)
+
+        if purpose == "variable creation":
+            words = line.split()
+            if len(words) < 3:
+                error("Variable needs name AND starting value!")
+            
+            bc.append(f"SET {words[1]} {words[2]}")
+
+        elif purpose == "empty line":
+            pass
+
+        else:
+            error(f"Cannot interpret line {line}")
+
+    return bc
+
+def compile(path, ignore):
     src = read_src(path)
 
     src = " " + src + " "
@@ -253,6 +312,14 @@ def compile(path, ignore, debug):
     info("Trimming lines...")
     lines = trim_lines(lines)
     succes("Trimmed all lines succesfully!")
+    
+    info("Converting lines into bytecode...")
+    bc = toBytecode(lines)
+    succes("Converted all lines into bytecode!")
+
+    info("Creating .mplc file from bytecode...")
+    write_compiled(bc, path)
+    succes("Succesfully created .mplc file from bytecode!")
 
 if __name__ == "__main__":
     import sys, argparse, os
@@ -286,4 +353,4 @@ if __name__ == "__main__":
                 more = input("Do you want to include more files? [y/n]\n>").lower() == "y"
         debug = input("Do you want debug information to display during compilation? [y/n]\n>").lower() == "y"
 
-    compile(file_path, include, debug)
+    compile(file_path, include)
