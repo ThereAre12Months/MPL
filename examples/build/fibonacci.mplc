@@ -1,4 +1,2 @@
-SET a §0
-SET b §1
-SWITCH a b
-ADDTO b a
+FN sayYourName §1 §4
+CALL sayYourName §1

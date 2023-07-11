@@ -1,6 +1,6 @@
-let a 0;
-let b 1;
+fn sayYourName() {
+    let name input("What's your name? ");
+    print(name);
+};
 
-a <-> b;
-
-b += a;
+sayYourName();

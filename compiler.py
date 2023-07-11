@@ -8,6 +8,11 @@ class Exact:
             self.a = int(val * (10**len(str(val))))
             self.b = 10**len(str(val))
 
+class TempFunction:
+    def __init__(self, name, *args):
+        self.n = name
+        self.a = args
+
 class bcolors:
     HEADER = "\033[95m"
     OKBLUE = "\033[94m"
@@ -119,18 +124,18 @@ def find_int(src, const_count):
     other = ""
     count = const_count
     in_const = False
-    in_float = False
+    in_text = False
     for idx, char in enumerate(src):
         if char in [str(i) for i in range(10)]:
             if src[idx-1] == "§":
                 in_const = True
                 other += char
-            elif src[idx-1] == "f":
-                in_float = True
+            elif not src[idx-1] in [str(i) for i in range(10)]+[" ", ",", "(", ")"]:
+                in_text = True
                 other += char
             elif in_const:
                 other += char
-            elif in_float:
+            elif in_text:
                 other += char
             else:
                 temp_int += char
@@ -143,7 +148,7 @@ def find_int(src, const_count):
                 temp_int = ""
 
             if not char == ".":
-                in_float = False
+                in_text = False
 
             in_const = False
             other += char
@@ -192,7 +197,7 @@ def find_float(src, const_count):
     return other, flts
 
 def find_array(src, const_count):
-    if not "[" in src and "]" in src:
+    if not ("[" in src and "]" in src):
         return src, []
     
     other = src 
@@ -219,6 +224,60 @@ def find_array(src, const_count):
         other = new
 
     return other, arrays
+
+def find_brackets(src, const_count):
+    if not ("(" in src and ")" in src):
+        return src, []
+    
+    other = src 
+    new = ""
+    count = const_count
+    brackets = []
+
+    while ")" in other:
+        idx = other.index(")")
+
+        start_pos = 0
+        end_pos = idx
+        current_pos = end_pos 
+
+        while other[current_pos] != "(":
+            current_pos -= 1
+        start_pos = current_pos
+
+        bracket = other[start_pos:end_pos+1]
+        brackets.append(bracket)
+        new = other.replace(bracket, " §" + str(count) + " ")
+        count += 1
+
+        other = new 
+
+    return other, brackets
+
+def find_codeblocks(src, const_count):
+    if not ("{" in src and "}" in src):
+        return src, []
+    
+    other = src 
+    new = ""
+    count = const_count 
+    blocks = []
+
+    while "}" in other:
+        end_pos = other.index("}")
+        current_pos = end_pos
+        while other[current_pos] != "{": current_pos -= 1
+        start_pos = current_pos
+
+        block = other[start_pos:end_pos+1]
+        new = other.replace(block, " §" + str(count) + " ")
+        block = toBytecode(trim_lines(split_source(block[1:-1])))
+        blocks.append(block)
+        count += 1
+
+        other = new 
+
+    return other, blocks
 
 def split_source(src):
     line = ""
@@ -259,11 +318,20 @@ def splitPath(path):
     if not t == "": p.append(t)
     return p
 
+def is_reference(txt):
+    return "§" in txt[:2]
+
 def getLinePurpose(line):
     words = line.split()
     if len(words) >= 1:
         if words[0] == "let":
+            if len(words) >= 4:
+                if is_reference(words[3]):
+                    return "function output to var"
             return "variable creation"
+        
+        if words[0] == "fn":
+            return "function creation"
         
     if len(words) >= 2:
         match words[1]:
@@ -280,7 +348,8 @@ def getLinePurpose(line):
             case "<->":
                 return "switch variables"
             case _:
-                return "empty line"
+                if is_reference(words[1]):
+                    return "call function"
         
     return "empty line"
 
@@ -332,6 +401,24 @@ def toBytecode(lines):
             else:
                 bc.append(f"SWITCH {words[0]} {words[2]}")
 
+        elif purpose == "call function":
+            if len(words) < 2:
+                error("HOOOOOOOOOOOWWWWWWW IS THIS POOOOOSSSSSSSSSIIIIIIIBLE?!?!?!?!?!?")
+            else:
+                bc.append(f"CALL {words[0]} {words[1]}")
+
+        elif purpose == "function output to var":
+            if len(words) < 4:
+                error("Man, I don't get these errors")
+            else:
+                bc.append(f"FNTOVAR {words[2]} {words[3]} {words[1]}")
+
+        elif purpose == "function creation":
+            if len(words) < 4:
+                error("Incomplete function")
+            else:
+                bc.append(f"FN {words[1]} {words[2]} {words[3]}")
+
         elif purpose == "empty line":
             if empty_lines: bc.append("NOP")
 
@@ -365,7 +452,15 @@ def compile(path, ignore):
     src, temp_constants = find_array(src, len(constants))
     constants += temp_constants
     succes(f"Found {len(temp_constants)} array litteral{'' if len(temp_constants) == 1 else 's'}.")
-    succes("Replaced all array litterals with references.") 
+    succes("Replaced all array litterals with references.")
+    src, temp_constants = find_brackets(src, len(constants))
+    constants += temp_constants
+    succes(f"Found {len(temp_constants)} bracket pair{'' if len(temp_constants) == 1 else 's'}.")
+    succes("Replaced all bracket pairs with references.") 
+    src, temp_constants = find_codeblocks(src, len(constants))
+    constants += temp_constants
+    succes(f"Found {len(temp_constants)} codeblock{'' if len(temp_constants) == 1 else 's'}.")
+    succes("Replaced all codeblocks with references.") 
 
     details("All litterals: " + str(constants))
 
@@ -411,9 +506,6 @@ if __name__ == "__main__":
         debug = args.debug
         ignore_warnings = args.warnings
         empty_lines = args.emptylines
-
-        print(ignore_warnings)
-        print(empty_lines)
 
     else:
         file_path = input("Enter the path to the file that you want to compile.\n>")
