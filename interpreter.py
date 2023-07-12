@@ -1,15 +1,67 @@
+class operator:
+    pass
+
+class function:
+    pass
+
+class codeblock:
+    pass
+
+class brackets:
+    pass
+
+class Value:
+    def __init__(self, type_, value):
+        self.t = type_ 
+        self.v = value
+
+        if self.t == "BRACKETS":
+            # this is trouble
+            pass
+
+    def __str__(self):
+        return str(self.v)
+
 class Funcs:
     def isBuiltin(funcname:str):
-        return funcname in ["out", "in"]
+        return funcname in ["out", "in", "type", "toInt", "toStr", "toFloat", "toBool", "toArray"]
     
-    def runBuiltin(funcname:str, args:list, consts:list, vars:dict):
+    def runBuiltin(funcname:str, args:list, consts:list, vars:dict, local_vars:dict={}, isLocal:bool=False):
         returnable = None
+
+        vals = []
+        tps = []
+
+        for a in args:
+            vals.append(Funcs.getInnerValue(a, consts=consts, vars=vars, local_vars=local_vars, isLocal=isLocal))
+            tps.append(a.t)
+
         match funcname:
             case "out":
-                returnable = print(*args)
+                returnable = Value(None, print(*vals))
 
             case "in":
-                returnable = input(args[0])
+                returnable = Value(str, input(vals[0]))
+
+            case "type":
+                returnable = Value(str, tps[0])
+
+            case "toInt":
+                returnable = Value(int, int(vals[0]))
+
+            case "toStr":
+                returnable = Value(str, str(vals[0]))
+
+            case "toFloat":
+                returnable = Value(float, float(vals[0]))
+
+            case "toBool":
+                returnable = Value(bool, bool(vals[0]))
+
+            case "toArray":
+                returnable = Value(list, list(vals[0]))
+
+            
 
         return vars, returnable
     
@@ -17,15 +69,69 @@ class Funcs:
         returnable = None
         new_vars = vars
         local_vars = {}
-        new_code = Funcs.getValue(code, consts, vars)
+        new_code = Funcs.getInnerValue(code)
         for line in new_code:
             new_vars, returnable, local_vars = executeLine(line, consts, new_vars, local_vars=local_vars, isLocal=True)
 
         return new_vars, returnable
+    
+    def checkStatement(statement:str, consts:list, vars:dict, local_vars:dict={}, isLocal:bool=False) -> bool:
+        splits = []
+        temp = ""
 
-    def parseArgs(args:str, consts:list, vars:dict, local_vars:dict = {}, isLocal:bool = False) -> list:
+        new_s = Funcs.getValue(statement, consts, vars, local_vars, isLocal).v
+        
+        for char in new_s[1:-1]:
+            if char == " ":
+                if temp != "":
+                    splits.append(temp)
+                    temp = ""
+            elif char in ["(", ")", "==", ">", "<", ">=", "<=", "!="]:
+                if temp != "":
+                    splits.append(temp)
+                splits.append(char)
+                temp = ""
+            else:
+                temp += char 
+
+        if not temp == "":
+            splits.append(temp)
+
+        if len(splits) == 1:
+            return bool(Funcs.getInnerValue(Funcs.getValue(splits[0], consts, vars, local_vars, isLocal), consts, vars, local_vars, isLocal))
+        
+        if len(splits) == 2:
+            error("Conditional cannot exist out of 2 characters")
+
+        if len(splits) == 3:
+            val1 = Funcs.getInnerValue(Funcs.getValue(splits[0], consts, vars, local_vars, isLocal), consts, vars, local_vars, isLocal)
+            val2 = Funcs.getInnerValue(Funcs.getValue(splits[2], consts, vars, local_vars, isLocal), consts, vars, local_vars, isLocal)
+
+            match splits[1]:
+                case "==":
+                    return val1 == val2 
+                
+                case "!=":
+                    return val1 != val2
+                
+                case ">":
+                    return val1 > val2 
+                
+                case "<":
+                    return val1 < val2 
+                
+                case ">=":
+                    return val1 >= val2 
+                
+                case "<=":
+                    return val1 <= val2
+                
+                case _:
+                    return False
+
+    def parseArgs(args:Value, consts:list, vars:dict, local_vars:dict = {}, isLocal:bool = False) -> list:
         new_args = []
-        a_args = Funcs.getValue(args, consts, vars)
+        a_args = args.v
         temp = ""
         for char in a_args[1:-1]:
             if char == ",":
@@ -48,24 +154,68 @@ class Funcs:
         
         return False
     
-    def getValue(v:str, consts:list, vars:dict, local_vars:dict = {}, isLocal:bool = False) -> any:
-        if len(v) < 2:
-            if isLocal and v in local_vars.keys():
+    def getValue(v:any, consts:list, vars:dict, local_vars:dict = {}, isLocal:bool = False) -> any:
+        if type(v) == str:
+            if "$" in v:
+                return consts[int(v.replace("$", "").replace(" ", ""))]
+            elif isLocal and v in local_vars.keys():
                 return local_vars[v]
             elif v in vars.keys():
                 return vars[v]
+            elif v in ["(", ")", "+", "-", "*", "/", "==", "!=", "<", "<=", ">", ">="]:
+                return Value(operator, v)
             else:
                 error(f"Variable {v} does not exist!")
+        elif type(v) == Value:
+            return v
         else:
-            if "$" in v[:2]:
-                return consts[int(v.replace("$", "").replace(" ", ""))]
+            error(f"Can't interpret value of {v}!")
+        
+    def splitBrackets(bracks):
+        splits = []
+        temp = ""
+
+        for char in bracks:
+            if char == " ":
+                if temp != "":
+                    splits.append(temp)
+                    temp = ""
+            elif char in ["(", ")", "+", "-", "*", "/"]:
+                splits.append(char)
+                temp = ""
             else:
-                if isLocal and v in local_vars.keys():
-                    return local_vars[v]
-                elif v in vars.keys():
-                    return vars[v]
+                temp += char 
+
+        if not temp == "":
+            splits.append(temp)
+
+        return splits
+
+    def getInnerValue(val:Value, consts:list=[], vars:dict={}, local_vars:dict={}, isLocal:bool=False) -> any:
+        if val.t == brackets:        
+            splitted = Funcs.splitBrackets(val.v[1:-1])
+            new = []
+            for split in splitted:
+                new_val = Funcs.getValue(split, consts, vars, local_vars, isLocal)
+                if new_val.t == brackets:
+                    new_new = Funcs.getInnerValue(new_val, consts=consts, vars=vars, local_vars=local_vars, isLocal=isLocal)
+                    new.append(Value(type(new_new), new_new))
                 else:
-                    error(f"Variable {v} does not exist!")
+                    new.append(new_val)
+            
+            result = ""
+            for v in new:
+                if v.t in [int, float, bool, operator]:
+                    result += v.v
+                elif v.t == str:
+                    result += '"' + v.v + '"'
+                else:
+                    pass
+
+            return eval(result)
+
+        else:
+            return val.v
 
 
 class bcolors:
@@ -79,6 +229,10 @@ class bcolors:
     ENDC = "\033[0m"
     BOLD = "\033[1m"
     UNDERLINE = "\033[4m"
+
+def log(msg):
+    print(msg)
+    return msg
 
 def info(msg):
     print(bcolors.OKGREEN + "INFO: " + bcolors.ENDC + str(msg))
@@ -124,21 +278,21 @@ def getInfo(const:str) -> tuple:
 
     if type_ == "STR":
         value.replace("\\n", "\n")
-        return value
+        return Value(str, value)
     
     elif type_ == "INT":
-        return int(value)
+        return Value(int, int(value))
     
     elif type_ == "FLOAT":
-        return float(value)
+        return Value(float, float(value))
     
     elif type_ == "BRACKETS":
-        return value 
+        return Value(brackets, value) 
     
     elif type_ == "CODE":
-        return splitCodeBlock(value)
+        return Value(codeblock, splitCodeBlock(value))
 
-    return value
+    return Value(None, value)
 
 
 def getConstants(src:str) -> list:
@@ -176,47 +330,60 @@ def executeLine(line:str, consts:list, vars:dict, local_vars:dict = {}, isLocal:
     match words[0]:
         case "FN":
             if isLocal:
-                new_locals.update({words[1]: [words[2], words[3]]})
+                new_locals.update({words[1]: Value(function, [Funcs.getValue(words[2], consts, new_vars, new_locals, isLocal), Funcs.getValue(words[3], consts, new_vars, new_locals, isLocal)])})
             else:
-                new_vars.update({words[1]: [words[2], words[3]]})
+                new_vars.update({words[1]: Value(function, [Funcs.getValue(words[2], consts, new_vars, new_locals, isLocal), Funcs.getValue(words[3], consts, new_vars, new_locals, isLocal)])})
+
+        case "IF":
+            if Funcs.checkStatement(words[1], consts, new_vars, new_locals, isLocal):
+                new_vars, _ = Funcs.runCustom(Funcs.getValue(words[2], consts, new_vars, new_locals, isLocal), [], consts, new_vars)
 
         case "CALL":
             if Funcs.isBuiltin(words[1]):
-                vars, _ = Funcs.runBuiltin(words[1], Funcs.parseArgs(words[2], consts, vars, local_vars, isLocal), consts, vars)
+                new_vars, _ = Funcs.runBuiltin(words[1], Funcs.parseArgs(Funcs.getValue(words[2], consts, new_vars, new_locals, isLocal), consts, new_vars, new_locals, isLocal), consts, new_vars, new_locals, isLocal)
 
             else:
-                if words[1] in vars.keys():
-                    vars, _ = Funcs.runCustom(vars[words[1]][1], Funcs.parseArgs(words[2], consts, vars, local_vars, isLocal), consts, vars)
+                if words[1] in new_vars.keys():
+                    new_vars, _ = Funcs.runCustom(new_vars[words[1]].v[1], Funcs.parseArgs(Funcs.getValue(words[2], consts, new_vars, new_locals, isLocal), consts, new_vars, new_locals, isLocal), consts, new_vars)
 
                 else:
                     error(f"Function '{words[1]}' does not exist!")
 
         case "FNTOVAR":
             if Funcs.isBuiltin(words[1]):
-                vars, temp = Funcs.runBuiltin(words[1], Funcs.parseArgs(words[2], consts, vars, local_vars, isLocal), consts, vars)
+                new_vars, temp = Funcs.runBuiltin(words[1], Funcs.parseArgs(Funcs.getValue(words[2], consts, new_vars, new_locals, isLocal), consts, new_vars, new_locals, isLocal), consts, new_vars)
                 if isLocal:
-                    local_vars[words[3]] = temp
+                    new_locals[words[3]] = temp
                 else:
-                    vars[words[3]] = temp
+                    new_vars[words[3]] = temp
 
             else:
-                if words[1] in vars.keys():
-                    vars, _ = Funcs.runCustom(vars[words[1]][1], Funcs.parseArgs(words[2], consts, vars, local_vars, isLocal), consts, vars)
+                if words[1] in new_vars.keys():
+                    new_vars, _ = Funcs.runCustom(new_vars[words[1]][1], Funcs.parseArgs(words[2], consts, new_vars, new_locals, isLocal), consts, new_vars)
 
                 else:
                     error(f"Function '{words[1]}' does not exist!")
 
         case "CREATE":
+            val = Funcs.getValue(words[2], consts, new_vars, new_locals, isLocal)
+            if val.t == brackets:
+                val = Funcs.getInnerValue(val, consts=consts, vars=new_vars, local_vars=new_locals, isLocal=isLocal)
+                val = Value(type(val), val)
             if isLocal:
-                local_vars.update({words[1] : Funcs.getValue(words[2], consts, vars, local_vars, isLocal)})
+                new_locals.update({words[1] : val})
+            else:
+                new_vars.update({words[1] : val})
 
         case "ADDTO":
-            if isLocal and words[1] in local_vars.keys():
-                local_vars.update({words[1] : local_vars[words[1]] + Funcs.getValue(words[2], consts, vars, local_vars, isLocal)})
-            elif words[1] in vars.keys():
-                vars.update({words[1] : vars[words[1]] + Funcs.getValue(words[2], consts, vars, local_vars, isLocal)})
+            if isLocal and words[1] in new_locals.keys():
+                old_val = new_locals[words[1]]
+                other_val = Funcs.getValue(words[2], consts, new_vars, new_locals, isLocal)
 
-    return vars, returnable, local_vars
+                new_locals.update({words[1] : Value(type(old_val), old_val.v + other_val.v)})
+            elif words[1] in new_vars.keys():
+                new_vars.update({words[1] : new_vars[words[1]] + Funcs.getInnerValue(Funcs.getValue(words[2], consts, new_vars, new_locals, isLocal))})
+
+    return new_vars, returnable, new_locals
 
 
 def interpret(path:str):

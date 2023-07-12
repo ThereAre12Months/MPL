@@ -160,6 +160,28 @@ def find_int(src, const_count):
 
     return other, ints
 
+def find_function_references(src, const_count):
+    other = src
+    count = const_count
+    refs = []
+    while "&" in other:
+        start_idx = other.index("&")
+        bracket_count = 0
+        end_idx = start_idx
+        while not (other[end_idx] == ")" and bracket_count == 1):
+            if other[end_idx] == "(":
+                bracket_count += 1
+            elif other[end_idx] == ")":
+                bracket_count -= 1
+
+            end_idx += 1
+
+        refs.append(other[start_idx:end_idx+1])
+        other = other.replace(other[start_idx:end_idx+1], f" ${count} ")
+        count += 1
+
+    return other, refs
+         
 def find_float(src, const_count):
     if not "f" in src:
         return src, []
@@ -338,6 +360,9 @@ def getLinePurpose(line):
         if words[0] == "fn":
             return "function creation"
         
+        if words[0] == "if":
+            return "if statement"
+        
     if len(words) >= 2:
         match words[1]:
             case "=":
@@ -420,9 +445,15 @@ def toBytecode(lines):
 
         elif purpose == "function creation":
             if len(words) < 4:
-                error("Incomplete function")
+                error("Incomplete function!")
             else:
                 bc.append(f"FN {words[1]} {words[2]} {words[3]}")
+
+        elif purpose == "if statement":
+            if len(words) < 3:
+                error("Incomplete if statement!")
+            else:
+                bc.append(f"IF {words[1]} {words[2]}")
 
         elif purpose == "empty line":
             if empty_lines: bc.append("NOP")
@@ -466,8 +497,6 @@ def compile(path, ignore):
     constants += temp_constants
     succes(f"Found {len(temp_constants)} codeblock{'' if len(temp_constants) == 1 else 's'}.")
     succes("Replaced all codeblocks with references.") 
-
-    details("All litterals: " + str(constants))
 
     # split into lines (based on semi-colon)
     info("Splitting lines...")
