@@ -23,18 +23,19 @@ class Funcs:
 
         return new_vars, returnable
 
-    def parseArgs(args:str) -> list:
+    def parseArgs(args:str, consts:list, vars:dict, local_vars:dict = {}, isLocal:bool = False) -> list:
         new_args = []
+        a_args = Funcs.getValue(args, consts, vars)
         temp = ""
-        for char in args[1:-1]:
+        for char in a_args[1:-1]:
             if char == ",":
-                new_args.append(temp)
+                new_args.append(Funcs.getValue(temp, consts, vars, local_vars, isLocal))
                 temp = ""
             else:
                 temp += char 
 
         if temp != "":
-            new_args.append(Funcs.getValue(temp))
+            new_args.append(Funcs.getValue(temp, consts, vars, local_vars, isLocal))
 
         return new_args
     
@@ -47,9 +48,11 @@ class Funcs:
         
         return False
     
-    def getValue(v:str, consts:list, vars:dict) -> any:
+    def getValue(v:str, consts:list, vars:dict, local_vars:dict = {}, isLocal:bool = False) -> any:
         if len(v) < 2:
-            if v in vars.keys():
+            if isLocal and v in local_vars.keys():
+                return local_vars[v]
+            elif v in vars.keys():
                 return vars[v]
             else:
                 error(f"Variable {v} does not exist!")
@@ -57,7 +60,9 @@ class Funcs:
             if "$" in v[:2]:
                 return consts[int(v.replace("$", "").replace(" ", ""))]
             else:
-                if v in vars.keys():
+                if isLocal and v in local_vars.keys():
+                    return local_vars[v]
+                elif v in vars.keys():
                     return vars[v]
                 else:
                     error(f"Variable {v} does not exist!")
@@ -177,14 +182,39 @@ def executeLine(line:str, consts:list, vars:dict, local_vars:dict = {}, isLocal:
 
         case "CALL":
             if Funcs.isBuiltin(words[1]):
-                vars, _ = Funcs.runBuiltin(words[1], Funcs.parseArgs(words[2]), consts, vars)
+                vars, _ = Funcs.runBuiltin(words[1], Funcs.parseArgs(words[2], consts, vars, local_vars, isLocal), consts, vars)
 
             else:
                 if words[1] in vars.keys():
-                    vars, _ = Funcs.runCustom(vars[words[1]][1], Funcs.parseArgs(words[2]), consts, vars)
+                    vars, _ = Funcs.runCustom(vars[words[1]][1], Funcs.parseArgs(words[2], consts, vars, local_vars, isLocal), consts, vars)
 
                 else:
                     error(f"Function '{words[1]}' does not exist!")
+
+        case "FNTOVAR":
+            if Funcs.isBuiltin(words[1]):
+                vars, temp = Funcs.runBuiltin(words[1], Funcs.parseArgs(words[2], consts, vars, local_vars, isLocal), consts, vars)
+                if isLocal:
+                    local_vars[words[3]] = temp
+                else:
+                    vars[words[3]] = temp
+
+            else:
+                if words[1] in vars.keys():
+                    vars, _ = Funcs.runCustom(vars[words[1]][1], Funcs.parseArgs(words[2], consts, vars, local_vars, isLocal), consts, vars)
+
+                else:
+                    error(f"Function '{words[1]}' does not exist!")
+
+        case "CREATE":
+            if isLocal:
+                local_vars.update({words[1] : Funcs.getValue(words[2], consts, vars, local_vars, isLocal)})
+
+        case "ADDTO":
+            if isLocal and words[1] in local_vars.keys():
+                local_vars.update({words[1] : local_vars[words[1]] + Funcs.getValue(words[2], consts, vars, local_vars, isLocal)})
+            elif words[1] in vars.keys():
+                vars.update({words[1] : vars[words[1]] + Funcs.getValue(words[2], consts, vars, local_vars, isLocal)})
 
     return vars, returnable, local_vars
 

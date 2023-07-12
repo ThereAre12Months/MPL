@@ -1,8 +1,10 @@
-STR: What's your name?\n
+STR: Hallo 
+STR: What's your name? 
+STR: !
 BRACKETS: ()
-BRACKETS: ( $0 )
-BRACKETS: (name)
-CODE: ['FNTOVAR input $2 name', 'CALL out $3']
+BRACKETS: ( $1 )
+BRACKETS: (msg)
+CODE: ['CREATE msg $0', 'FNTOVAR in $4 name', 'ADDTO msg name', 'ADDTO msg $2', 'CALL out $5']
 __________START_OF_CODE__________
-FN sayYourName $1 $4
-CALL sayYourName $1
+FN sayYourName $3 $6
+CALL sayYourName $3

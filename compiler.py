@@ -368,7 +368,7 @@ def toBytecode(lines):
             if len(words) < 3:
                 error("Variable needs name AND starting value!")
             else:
-                bc.append(f"SET {words[1]} {words[2]}")
+                bc.append(f"CREATE {words[1]} {words[2]}")
 
         elif purpose == "set variable":
             if len(words) < 3:

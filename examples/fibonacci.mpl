@@ -1,6 +1,10 @@
 fn sayYourName() {
-    let name input("What's your name?\n");
-    out(name);
+    let msg "Hallo ";
+    let name in("What's your name? ");
+    msg += name;
+    msg += "!";
+    
+    out(msg);
 };
 
 sayYourName();
