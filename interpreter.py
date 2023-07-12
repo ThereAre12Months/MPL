@@ -1,6 +1,67 @@
-class BuiltInFuncs:
-    def isBuiltin(funcname):
-        pass
+class Funcs:
+    def isBuiltin(funcname:str):
+        return funcname in ["out", "in"]
+    
+    def runBuiltin(funcname:str, args:list, consts:list, vars:dict):
+        returnable = None
+        match funcname:
+            case "out":
+                returnable = print(*args)
+
+            case "in":
+                returnable = input(args[0])
+
+        return vars, returnable
+    
+    def runCustom(code, args: list, consts:list, vars:dict) -> tuple:
+        returnable = None
+        new_vars = vars
+        local_vars = {}
+        new_code = Funcs.getValue(code, consts, vars)
+        for line in new_code:
+            new_vars, returnable, local_vars = executeLine(line, consts, new_vars, local_vars=local_vars, isLocal=True)
+
+        return new_vars, returnable
+
+    def parseArgs(args:str) -> list:
+        new_args = []
+        temp = ""
+        for char in args[1:-1]:
+            if char == ",":
+                new_args.append(temp)
+                temp = ""
+            else:
+                temp += char 
+
+        if temp != "":
+            new_args.append(Funcs.getValue(temp))
+
+        return new_args
+    
+    def isValue(v:any) -> bool: # do not use function (not done yet + faulty results)
+        if type(v) != str:
+            return True
+        
+        elif "$" in v:
+            return False
+        
+        return False
+    
+    def getValue(v:str, consts:list, vars:dict) -> any:
+        if len(v) < 2:
+            if v in vars.keys():
+                return vars[v]
+            else:
+                error(f"Variable {v} does not exist!")
+        else:
+            if "$" in v[:2]:
+                return consts[int(v.replace("$", "").replace(" ", ""))]
+            else:
+                if v in vars.keys():
+                    return vars[v]
+                else:
+                    error(f"Variable {v} does not exist!")
+
 
 class bcolors:
     HEADER = "\033[95m"
@@ -30,14 +91,14 @@ def error(msg):
     print(bcolors.FAIL + "ERROR: " + str(msg) + bcolors.ENDC)
     sys.exit()
 
-def read_src(path):
+def read_src(path:str) -> str:
     if os.path.exists(path):
         with open(path, "r") as f:
             return f.read()
     else:
         error(f"File {path} does not exist.")
 
-def splitCodeBlock(cb):
+def splitCodeBlock(cb:str) -> list:
     line = ""
     lines = []
     in_str = False
@@ -51,7 +112,7 @@ def splitCodeBlock(cb):
             line += char
     return lines
 
-def getInfo(const):
+def getInfo(const:str) -> tuple:
     idx = const.index(": ")
     type_ = const[:idx]
     value = const[idx+2:]
@@ -72,21 +133,21 @@ def getInfo(const):
     elif type_ == "CODE":
         return splitCodeBlock(value)
 
-    return type_, value
+    return value
 
 
-def getConstants(src):
+def getConstants(src:str) -> list:
     lines = src.splitlines()
     new_lines = []
     idx = 0
     while lines[idx] != "_"*10 + "START_OF_CODE" + "_"*10:
-        new_lines.append(lines[idx])
-        getInfo(lines[idx])
+        new_lines.append(getInfo(lines[idx]))
+        
         idx += 1
 
     return new_lines
 
-def getCode(src):
+def getCode(src:str) -> list:
     lines = src.splitlines()
     new_lines = []
     has_entered = False 
@@ -101,18 +162,34 @@ def getCode(src):
 
     return new_lines
 
-def executeLine(line, consts, vars):
+def executeLine(line:str, consts:list, vars:dict, local_vars:dict = {}, isLocal:bool = False) -> tuple:
     words = line.split()
+    new_vars = vars
+    new_locals = local_vars
+    returnable = None
 
     match words[0]:
         case "FN":
-            vars.update({words[1]: [words[2], words[3]]})
+            if isLocal:
+                new_locals.update({words[1]: [words[2], words[3]]})
+            else:
+                new_vars.update({words[1]: [words[2], words[3]]})
 
         case "CALL":
-            pass
+            if Funcs.isBuiltin(words[1]):
+                vars, _ = Funcs.runBuiltin(words[1], Funcs.parseArgs(words[2]), consts, vars)
+
+            else:
+                if words[1] in vars.keys():
+                    vars, _ = Funcs.runCustom(vars[words[1]][1], Funcs.parseArgs(words[2]), consts, vars)
+
+                else:
+                    error(f"Function '{words[1]}' does not exist!")
+
+    return vars, returnable, local_vars
 
 
-def interpret(path):
+def interpret(path:str):
     src = read_src(path)
 
     constants = getConstants(src)
@@ -121,11 +198,10 @@ def interpret(path):
     vars = {}
 
     for l in code:
-        vars = executeLine(l, constants, vars)
+        vars, _, _ = executeLine(l, constants, vars)
 
 if __name__ == "__main__":
     import sys, argparse, os
-    global debug, ignore_warnings, empty_lines
     os.system("")
 
     if len(sys.argv) > 1:
