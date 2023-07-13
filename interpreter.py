@@ -11,7 +11,7 @@ class brackets:
     pass
 
 class Value:
-    def __init__(self, type_, value):
+    def __init__(self, type_, value) -> None:
         self.t = type_ 
         self.v = value
 
@@ -19,14 +19,14 @@ class Value:
             # this is trouble
             pass
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.v)
 
 class Funcs:
-    def isBuiltin(funcname:str):
+    def isBuiltin(funcname:str) -> bool:
         return funcname in ["out", "in", "type", "toInt", "toStr", "toFloat", "toBool", "toArray"]
     
-    def runBuiltin(funcname:str, args:list, consts:list, vars:dict, local_vars:dict={}, isLocal:bool=False):
+    def runBuiltin(funcname:str, args:list, consts:list, vars:dict, local_vars:dict={}, isLocal:bool=False) -> tuple[dict, any]:
         returnable = None
 
         vals = []
@@ -65,7 +65,7 @@ class Funcs:
 
         return vars, returnable
     
-    def runCustom(code, args: list, consts:list, vars:dict) -> tuple:
+    def runCustom(code, args: list, consts:list, vars:dict) -> tuple[dict, any]:
         returnable = None
         new_vars = vars
         local_vars = {}
@@ -171,7 +171,7 @@ class Funcs:
         else:
             error(f"Can't interpret value of {v}!")
         
-    def splitBrackets(bracks):
+    def splitBrackets(bracks) -> list:
         splits = []
         temp = ""
 
@@ -271,7 +271,7 @@ def splitCodeBlock(cb:str) -> list:
             line += char
     return lines
 
-def getInfo(const:str) -> tuple:
+def getInfo(const:str) -> Value:
     idx = const.index(": ")
     type_ = const[:idx]
     value = const[idx+2:]
@@ -321,7 +321,7 @@ def getCode(src:str) -> list:
 
     return new_lines
 
-def executeLine(line:str, consts:list, vars:dict, local_vars:dict = {}, isLocal:bool = False) -> tuple:
+def executeLine(line:str, consts:list, vars:dict, local_vars:dict = {}, isLocal:bool = False) -> tuple[dict, any, dict]:
     words = line.split()
     new_vars = vars
     new_locals = local_vars
@@ -386,7 +386,7 @@ def executeLine(line:str, consts:list, vars:dict, local_vars:dict = {}, isLocal:
     return new_vars, returnable, new_locals
 
 
-def interpret(path:str):
+def interpret(path:str) -> None:
     src = read_src(path)
 
     constants = getConstants(src)

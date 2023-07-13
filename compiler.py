@@ -361,7 +361,7 @@ def getLinePurpose(line):
             return "function creation"
         
         if words[0] == "if":
-            return "if statement"
+            return "if statement"            
         
     if len(words) >= 2:
         match words[1]:
