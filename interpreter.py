@@ -10,6 +10,9 @@ class codeblock:
 class brackets:
     pass
 
+class functionReference:
+    pass
+
 class Value:
     def __init__(self, type_, value) -> None:
         self.t = type_ 
@@ -192,12 +195,16 @@ class Funcs:
         return splits
 
     def getInnerValue(val:Value, consts:list=[], vars:dict={}, local_vars:dict={}, isLocal:bool=False) -> any:
-        if val.t == brackets:        
+        if val.t == functionReference:
+            _, temp, _ = executeLine(val.v, consts, vars, local_vars, isLocal)
+            return Funcs.getInnerValue(temp, consts, vars, local_vars, isLocal)
+
+        elif val.t == brackets:
             splitted = Funcs.splitBrackets(val.v[1:-1])
             new = []
             for split in splitted:
                 new_val = Funcs.getValue(split, consts, vars, local_vars, isLocal)
-                if new_val.t == brackets:
+                if new_val.t == brackets or new_val.t == functionReference:
                     new_new = Funcs.getInnerValue(new_val, consts=consts, vars=vars, local_vars=local_vars, isLocal=isLocal)
                     new.append(Value(type(new_new), new_new))
                 else:
@@ -211,7 +218,7 @@ class Funcs:
                     result += '"' + v.v + '"'
                 else:
                     pass
-
+            
             return eval(result)
 
         else:
@@ -291,6 +298,9 @@ def getInfo(const:str) -> Value:
     
     elif type_ == "CODE":
         return Value(codeblock, splitCodeBlock(value))
+    
+    elif type_ == "FNREF":
+        return Value(functionReference, value)
 
     return Value(None, value)
 
@@ -340,11 +350,11 @@ def executeLine(line:str, consts:list, vars:dict, local_vars:dict = {}, isLocal:
 
         case "CALL":
             if Funcs.isBuiltin(words[1]):
-                new_vars, _ = Funcs.runBuiltin(words[1], Funcs.parseArgs(Funcs.getValue(words[2], consts, new_vars, new_locals, isLocal), consts, new_vars, new_locals, isLocal), consts, new_vars, new_locals, isLocal)
+                new_vars, returnable = Funcs.runBuiltin(words[1], Funcs.parseArgs(Funcs.getValue(words[2], consts, new_vars, new_locals, isLocal), consts, new_vars, new_locals, isLocal), consts, new_vars, new_locals, isLocal)
 
             else:
                 if words[1] in new_vars.keys():
-                    new_vars, _ = Funcs.runCustom(new_vars[words[1]].v[1], Funcs.parseArgs(Funcs.getValue(words[2], consts, new_vars, new_locals, isLocal), consts, new_vars, new_locals, isLocal), consts, new_vars)
+                    new_vars, returable = Funcs.runCustom(new_vars[words[1]].v[1], Funcs.parseArgs(Funcs.getValue(words[2], consts, new_vars, new_locals, isLocal), consts, new_vars, new_locals, isLocal), consts, new_vars)
 
                 else:
                     error(f"Function '{words[1]}' does not exist!")

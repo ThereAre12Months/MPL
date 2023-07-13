@@ -159,29 +159,7 @@ def find_int(src, const_count):
         ints.append("INT: " + str(temp_int))
 
     return other, ints
-
-def find_function_references(src, const_count):
-    other = src
-    count = const_count
-    refs = []
-    while "&" in other:
-        start_idx = other.index("&")
-        bracket_count = 0
-        end_idx = start_idx
-        while not (other[end_idx] == ")" and bracket_count == 1):
-            if other[end_idx] == "(":
-                bracket_count += 1
-            elif other[end_idx] == ")":
-                bracket_count -= 1
-
-            end_idx += 1
-
-        refs.append(other[start_idx:end_idx+1])
-        other = other.replace(other[start_idx:end_idx+1], f" ${count} ")
-        count += 1
-
-    return other, refs
-         
+ 
 def find_float(src, const_count):
     if not "f" in src:
         return src, []
@@ -219,6 +197,31 @@ def find_float(src, const_count):
         flts.append("FLOAT: " + str(temp_flt))
 
     return other, flts
+
+def find_function_references(src, const_count):
+    other = src
+    count = const_count
+    refs = []
+    while "&" in other:
+        start_idx = other.index("&")
+        bracket_count = 0
+        end_idx = start_idx
+        while not (other[end_idx] == ")" and bracket_count == 1):
+            if other[end_idx] == "(":
+                bracket_count += 1
+            elif other[end_idx] == ")":
+                bracket_count -= 1
+
+            end_idx += 1
+
+        new_replacing, other_consts = find_brackets(other[start_idx:end_idx+1], count)
+        refs += other_consts
+        count += len(other_consts)
+        refs.append("FNREF: CALL " + str(new_replacing)[1:])
+        other = other.replace(other[start_idx:end_idx+1], f" ${count} ")
+        count += 1
+
+    return other, refs
 
 def find_array(src, const_count):
     if not ("[" in src and "]" in src):
@@ -361,7 +364,7 @@ def getLinePurpose(line):
             return "function creation"
         
         if words[0] == "if":
-            return "if statement"            
+            return "if statement"
         
     if len(words) >= 2:
         match words[1]:
@@ -485,6 +488,10 @@ def compile(path, ignore):
     constants += temp_constants
     succes(f"Found {len(temp_constants)} float litteral{'' if len(temp_constants) == 1 else 's'}.")
     succes("Replaced all float litterals with references.")
+    src, temp_constants = find_function_references(src, len(constants))
+    constants += temp_constants
+    succes(f"Found {len(temp_constants)} function reference{'' if len(temp_constants) == 1 else 's'}.")
+    succes("Replaced all function references with references.")
     src, temp_constants = find_array(src, len(constants))
     constants += temp_constants
     succes(f"Found {len(temp_constants)} array litteral{'' if len(temp_constants) == 1 else 's'}.")
