@@ -375,6 +375,9 @@ def getLinePurpose(line):
         if words[0] == "until":
             return "until loop"
         
+        if words[0] == "loop":
+            return "loop loop"
+        
     if len(words) >= 2:
         match words[1]:
             case "=":
@@ -485,6 +488,12 @@ def toBytecode(lines):
             else:
                 bc.append(f"UNTIL {words[1]} {words[2]}")
 
+        elif purpose == "loop loop":
+            if len(words) < 2:
+                error("Incomplete loop loop")
+            else:
+                bc.append(f"LOOP {words[1]}")
+
         elif purpose == "empty line":
             if empty_lines: bc.append("NOP")
 
@@ -497,7 +506,7 @@ def toBytecode(lines):
 
     return bc
 
-def compile(path, ignore):
+def compile(path, ignore, doWrite=True, doDebug=False):
     src = read_src(path)
 
     src = " " + src + " "
@@ -545,9 +554,19 @@ def compile(path, ignore):
     bc = toBytecode(lines)
     succes("Converted all lines into bytecode!")
 
-    info("Creating .mplc file from bytecode...")
-    write_compiled(constants, bc, path)
-    succes("Succesfully created .mplc file from bytecode!")
+    if doWrite:
+        info("Creating .mplc file from bytecode...")
+        write_compiled(constants, bc, path)
+        succes("Succesfully created .mplc file from bytecode!")
+    else:
+        file = "\n".join([str(c) for c in constants])
+        file += "\n" + "_"*10 + "START_OF_CODE" + "_"*10 + "\n"
+        file += "\n".join(bc)
+        return file
+
+def setGlobals():
+    global debug, ignore_warnings, empty_lines
+    debug = ignore_warnings = empty_lines = False
 
 if __name__ == "__main__":
     import sys, argparse, os

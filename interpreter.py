@@ -1,3 +1,7 @@
+import sys, time, os
+
+doGraphics = False
+
 class operator:
     pass
 
@@ -11,6 +15,9 @@ class brackets:
     pass
 
 class functionReference:
+    pass
+
+class color:
     pass
 
 class Value:
@@ -27,10 +34,10 @@ class Value:
 
 class Funcs:
     def isBuiltin(funcname:str) -> bool:
-        return funcname in ["out", "in", "type", "toInt", "toStr", "toFloat", "toBool", "toArray"]
+        return funcname in ["nothing", "out", "in", "type", "toInt", "toStr", "toFloat", "toBool", "toArray", "sleep", "time", "setup", "title", "color", "fill", "pixel", "circle", "mouseX", "mouseY", "update"]
     
     def runBuiltin(funcname:str, args:list, consts:list, vars:dict, local_vars:dict={}, isLocal:bool=False) -> tuple[dict, any]:
-        returnable = None
+        returnable = Value(None, None)
 
         vals = []
         tps = []
@@ -64,15 +71,64 @@ class Funcs:
             case "toArray":
                 returnable = Value(list, list(vals[0]))
 
+            case "sleep":
+                time.sleep(vals[0])
+                returnable = Value(int, vals[0])
+
+            case "time":
+                returnable = Value(int, time.time())
+
+            case "setup":
+                global doGraphics
+                os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
+                doGraphics = True
+                global pg 
+                import pygame as pg
+                pg.init()
+                returnable = Value(pg.Surface, pg.display.set_mode((vals[0], vals[1])))
+
+            case "title":
+                pg.display.set_caption(vals[0])
+                returnable = Value(str, vals[0])
+
+            case "color":
+                if len(vals) == 0:
+                    returnable = Value(color, [0, 0, 0])
+                elif len(vals) == 1:
+                    returnable = Value(color, [vals[0], vals[0], vals[0]])
+                elif len(vals) == 3:
+                    returnable = Value(color, [vals[0], vals[1], vals[2]])
+
+            case "fill":
+                pg.display.get_surface().fill(vals[0])
+                returnable = Value(color, vals[0])
+
+            case "update":
+                pg.display.update()
+
+            case "pixel":
+                pg.draw.circle(pg.display.get_surface(), vals[2], (vals[0], vals[1]), 1)
+                pg.display.update()
+
+            case "circle":
+                pg.draw.circle(pg.display.get_surface(), vals[3], (vals[0], vals[1]), vals[2])
+
+            case "mouseX":
+                returnable = Value(int, pg.mouse.get_pos()[0])
+
+            case "mouseY":
+                returnable = Value(int, pg.mouse.get_pos()[1])
+
             
 
         return vars, returnable
     
-    def runCustom(code, args: dict, consts:list, vars:dict) -> tuple[dict, any]:
+    def runCustom(code, args:dict, consts:list, vars:dict) -> tuple[dict, any]:
         returnable = None
         new_vars = vars
         local_vars = args
         new_code = Funcs.getInnerValue(code)
+
         for line in new_code:
             new_vars, returnable, local_vars = executeLine(line, consts, new_vars, local_vars=local_vars, isLocal=True)
 
@@ -167,13 +223,13 @@ class Funcs:
         temp = ""
         for char in a_args[1:-1]:
             if char == ",":
-                new_args.append(Funcs.getValue(temp, consts, vars, local_vars, isLocal))
+                new_args.append(Funcs.getValue(Funcs.trim(temp), consts, vars, local_vars, isLocal))
                 temp = ""
             else:
                 temp += char 
 
         if temp != "":
-            new_args.append(Funcs.getValue(temp, consts, vars, local_vars, isLocal))
+            new_args.append(Funcs.getValue(Funcs.trim(temp), consts, vars, local_vars, isLocal))
 
         return new_args
     
@@ -371,6 +427,12 @@ def executeLine(line:str, consts:list, vars:dict, local_vars:dict = {}, isLocal:
     new_locals = local_vars
     returnable = None
 
+    if doGraphics:
+        for ev in pg.event.get():
+            if ev.type == pg.QUIT:
+                pg.quit()
+                sys.exit()
+
     match words[0]:
         case "FN":
             if isLocal:
@@ -390,10 +452,14 @@ def executeLine(line:str, consts:list, vars:dict, local_vars:dict = {}, isLocal:
             while Funcs.checkStatement(words[1], consts, new_vars, new_locals, isLocal):
                 new_vars, _ = Funcs.runCustom(Funcs.getValue(words[2], consts, new_vars, new_locals, isLocal), {}, consts, new_vars)
 
-        case "WHILE":
+        case "UNTIL":
             while not Funcs.checkStatement(words[1], consts, new_vars, new_locals, isLocal):
                 new_vars, _ = Funcs.runCustom(Funcs.getValue(words[2], consts, new_vars, new_locals, isLocal), {}, consts, new_vars)
 
+        case "LOOP":
+            while True:
+                new_vars, _ = Funcs.runCustom(Funcs.getValue(words[1], consts, new_vars, new_locals, isLocal), {}, consts, new_vars)
+        
         case "CALL":
             if Funcs.isBuiltin(words[1]):
                 new_vars, returnable = Funcs.runBuiltin(words[1], Funcs.parseArgs(Funcs.getValue(words[2], consts, new_vars, new_locals, isLocal), consts, new_vars, new_locals, isLocal), consts, new_vars, new_locals, isLocal)
@@ -431,6 +497,16 @@ def executeLine(line:str, consts:list, vars:dict, local_vars:dict = {}, isLocal:
             else:
                 new_vars.update({words[1] : val})
 
+        case "SET":
+            val = Funcs.getValue(words[2], consts, new_vars, new_locals, isLocal)
+            if val.t == brackets:
+                val = Funcs.getInnerValue(val, consts, new_vars, new_locals, isLocal)
+                val = Value(type(val), val)
+            if isLocal and words[1] in new_locals.keys():
+                new_locals.update({words[1] : val})
+            else:
+                new_vars.update({words[1] : val})
+
         case "ADDTO":
             if isLocal and words[1] in new_locals.keys():
                 old_val = new_locals[words[1]]
@@ -459,8 +535,11 @@ def executeLine(line:str, consts:list, vars:dict, local_vars:dict = {}, isLocal:
     return new_vars, returnable, new_locals
 
 
-def interpret(path:str) -> None:
-    src = read_src(path)
+def interpret(path:str, isSrc=False) -> None:
+    if not isSrc:
+        src = read_src(path)
+    else:
+        src = path
 
     constants = getConstants(src)
     code = getCode(src)
@@ -471,7 +550,7 @@ def interpret(path:str) -> None:
         vars, _, _ = executeLine(l, constants, vars)
 
 if __name__ == "__main__":
-    import sys, argparse, os
+    import argparse
     os.system("")
 
     if len(sys.argv) > 1:

@@ -5,7 +5,7 @@ out(a);
 
 let count 0;
 
-repeat 4 {
+repeat 15 {
     a <-> b;
     b += a;
     out(a);

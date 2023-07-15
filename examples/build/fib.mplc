@@ -1,7 +1,7 @@
 INT: 0
 INT: 1
 INT: 0
-INT: 4
+INT: 15
 INT: 1
 BRACKETS: (a)
 CODE: ['SWITCH a b', 'ADDTO b a', 'CALL out $5', 'ADDTO count $4']
