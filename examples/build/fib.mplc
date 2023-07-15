@@ -1,2 +1,13 @@
-
+INT: 0
+INT: 1
+INT: 0
+INT: 4
+INT: 1
+BRACKETS: (a)
+CODE: ['SWITCH a b', 'ADDTO b a', 'CALL out $5', 'ADDTO count $4']
 __________START_OF_CODE__________
+CREATE a $0
+CREATE b $1
+CALL out $5
+CREATE count $2
+RPT $3 $6

@@ -1,5 +1,5 @@
-fn sayYourName() {
-    let name in("What's your name? ");
+fn sayYourName(txt) {
+    let name in(txt);
 
     if (name == "Simon") {
         out("Jij bent de allerbeste broer ooit!!!!!!!");
@@ -30,4 +30,4 @@ fn sayYourName() {
     };
 };
 
-sayYourName();
+sayYourName("Wat is jouw naam? ");

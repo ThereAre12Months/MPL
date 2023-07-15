@@ -1,0 +1,8 @@
+HIGH PRIORITY
+    while/for loops
+
+MEDIUM PRIORITY
+    graphics
+
+LOW PRIORITY
+    recursive function references

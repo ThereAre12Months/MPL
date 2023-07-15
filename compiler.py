@@ -366,6 +366,15 @@ def getLinePurpose(line):
         if words[0] == "if":
             return "if statement"
         
+        if words[0] == "repeat":
+            return "repeat loop"
+        
+        if words[0] == "while":
+            return "while loop"
+        
+        if words[0] == "until":
+            return "until loop"
+        
     if len(words) >= 2:
         match words[1]:
             case "=":
@@ -430,7 +439,7 @@ def toBytecode(lines):
 
         elif purpose == "switch variables":
             if len(words) < 3:
-                error("Cannot switch variable by None!")
+                error("Cannot switch variable with None!")
             else:
                 bc.append(f"SWITCH {words[0]} {words[2]}")
 
@@ -457,6 +466,24 @@ def toBytecode(lines):
                 error("Incomplete if statement!")
             else:
                 bc.append(f"IF {words[1]} {words[2]}")
+
+        elif purpose == "repeat loop":
+            if len(words) < 3:
+                error("Incomplete repeat loop!")
+            else:
+                bc.append(f"RPT {words[1]} {words[2]}")
+
+        elif purpose == "while loop":
+            if len(words) < 3:
+                error("Incomplete while loop")
+            else:
+                bc.append(f"WHILE {words[1]} {words[2]}")
+
+        elif purpose == "until loop":
+            if len(words) < 3:
+                error("Incomplete until loop")
+            else:
+                bc.append(f"UNTIL {words[1]} {words[2]}")
 
         elif purpose == "empty line":
             if empty_lines: bc.append("NOP")

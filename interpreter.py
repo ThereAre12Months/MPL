@@ -68,10 +68,10 @@ class Funcs:
 
         return vars, returnable
     
-    def runCustom(code, args: list, consts:list, vars:dict) -> tuple[dict, any]:
+    def runCustom(code, args: dict, consts:list, vars:dict) -> tuple[dict, any]:
         returnable = None
         new_vars = vars
-        local_vars = {}
+        local_vars = args
         new_code = Funcs.getInnerValue(code)
         for line in new_code:
             new_vars, returnable, local_vars = executeLine(line, consts, new_vars, local_vars=local_vars, isLocal=True)
@@ -89,11 +89,6 @@ class Funcs:
                 if temp != "":
                     splits.append(temp)
                     temp = ""
-            elif char in ["(", ")", "==", ">", "<", ">=", "<=", "!="]:
-                if temp != "":
-                    splits.append(temp)
-                splits.append(char)
-                temp = ""
             else:
                 temp += char 
 
@@ -131,6 +126,40 @@ class Funcs:
                 
                 case _:
                     return False
+                
+    def trim(txt:str) -> str:
+        n = txt 
+        while len(n) > 0 and n[0] in [" ", "\t"]: n = n[1:]
+        while len(n) > 0 and n[-1] in [" ", "\t"]: n = n[:-1]
+        return n
+                
+    def parseNamedArgs(argNames:Value, args:Value, consts:list, vars:dict, local_vars:dict={}, isLocal:bool=False) -> dict:
+        new_names = []
+        temp = ""
+        for char in argNames.v[1:-1]:
+            if char == ",":
+                new_names.append(Funcs.trim(temp))
+                temp = ""
+            else:
+                temp += char 
+        if temp != "":
+            new_names.append(Funcs.trim(temp))
+
+        new_args = {}
+        a_args = args.v
+        temp = ""
+        for char in a_args[1:-1]:
+            if char == ",":
+                new_args.update({new_names[len(new_args.keys())] : Funcs.getValue(temp, consts, vars, local_vars, isLocal)})
+                temp = ""
+            else:
+                temp += char 
+
+        if temp != "":
+            new_args.update({new_names[len(new_args.keys())] : Funcs.getValue(temp, consts, vars, local_vars, isLocal)})
+
+        
+        return new_args
 
     def parseArgs(args:Value, consts:list, vars:dict, local_vars:dict = {}, isLocal:bool = False) -> list:
         new_args = []
@@ -169,6 +198,8 @@ class Funcs:
                 return Value(operator, v)
             else:
                 error(f"Variable {v} does not exist!")
+        elif type(v) == int:
+            return Value(int, v)
         elif type(v) == Value:
             return v
         else:
@@ -195,6 +226,9 @@ class Funcs:
         return splits
 
     def getInnerValue(val:Value, consts:list=[], vars:dict={}, local_vars:dict={}, isLocal:bool=False) -> any:
+        if type(val) != Value:
+            return val
+        
         if val.t == functionReference:
             _, temp, _ = executeLine(val.v, consts, vars, local_vars, isLocal)
             return Funcs.getInnerValue(temp, consts, vars, local_vars, isLocal)
@@ -346,7 +380,19 @@ def executeLine(line:str, consts:list, vars:dict, local_vars:dict = {}, isLocal:
 
         case "IF":
             if Funcs.checkStatement(words[1], consts, new_vars, new_locals, isLocal):
-                new_vars, _ = Funcs.runCustom(Funcs.getValue(words[2], consts, new_vars, new_locals, isLocal), [], consts, new_vars)
+                new_vars, _ = Funcs.runCustom(Funcs.getValue(words[2], consts, new_vars, new_locals, isLocal), {}, consts, new_vars)
+
+        case "RPT":
+            for i in range(Funcs.getInnerValue(Funcs.getValue(words[1], consts, new_vars, new_locals, isLocal), consts, new_vars, new_locals, isLocal)):
+                new_vars, _ = Funcs.runCustom(Funcs.getValue(words[2], consts, new_vars, new_locals, isLocal), {}, consts, new_vars)
+
+        case "WHILE":
+            while Funcs.checkStatement(words[1], consts, new_vars, new_locals, isLocal):
+                new_vars, _ = Funcs.runCustom(Funcs.getValue(words[2], consts, new_vars, new_locals, isLocal), {}, consts, new_vars)
+
+        case "WHILE":
+            while not Funcs.checkStatement(words[1], consts, new_vars, new_locals, isLocal):
+                new_vars, _ = Funcs.runCustom(Funcs.getValue(words[2], consts, new_vars, new_locals, isLocal), {}, consts, new_vars)
 
         case "CALL":
             if Funcs.isBuiltin(words[1]):
@@ -354,8 +400,9 @@ def executeLine(line:str, consts:list, vars:dict, local_vars:dict = {}, isLocal:
 
             else:
                 if words[1] in new_vars.keys():
-                    new_vars, returable = Funcs.runCustom(new_vars[words[1]].v[1], Funcs.parseArgs(Funcs.getValue(words[2], consts, new_vars, new_locals, isLocal), consts, new_vars, new_locals, isLocal), consts, new_vars)
-
+                    new_vars, returnable = Funcs.runCustom(new_vars[words[1]].v[1], Funcs.parseNamedArgs(new_vars[words[1]].v[0], Funcs.getValue(words[2], consts, new_vars, new_locals, isLocal), consts, new_vars, new_locals, isLocal), consts, new_vars)
+                elif words[1] in new_locals.keys():
+                    new_locals, returnable = Funcs.runCustom(new_locals[words[1]].v[1], Funcs.parseNamedArgs(new_locals[words[1]].v[0], Funcs.getValue(words[2], consts, new_vars, new_locals, isLocal), consts, new_vars, new_locals, isLocal), consts, new_vars)
                 else:
                     error(f"Function '{words[1]}' does not exist!")
 
@@ -391,7 +438,23 @@ def executeLine(line:str, consts:list, vars:dict, local_vars:dict = {}, isLocal:
 
                 new_locals.update({words[1] : Value(type(old_val), old_val.v + other_val.v)})
             elif words[1] in new_vars.keys():
-                new_vars.update({words[1] : new_vars[words[1]] + Funcs.getInnerValue(Funcs.getValue(words[2], consts, new_vars, new_locals, isLocal))})
+                new_vars.update({words[1] : Funcs.getValue(Funcs.getInnerValue(new_vars[words[1]], consts, new_vars, new_locals, isLocal) + Funcs.getInnerValue(Funcs.getValue(words[2], consts, new_vars, new_locals, isLocal)), consts, new_vars, new_locals, isLocal)})
+
+        case "SWITCH":
+            if isLocal and words[1] in new_locals.keys():
+                temp = new_locals[words[1]]
+                new_locals[words[1]] = (new_locals[words[2]] if words[2] in new_locals.keys() else new_vars[words[2]])
+                if words[2] in new_locals.keys():
+                    new_locals[words[2]] = temp 
+                else:
+                    new_vars[words[2]] = temp 
+            else:
+                temp = new_vars[words[1]]
+                new_vars[words[1]] = (new_locals[words[2]] if isLocal and words[2] in new_locals.keys() else new_vars[words[2]])
+                if isLocal and words[2] in new_locals.keys():
+                    new_locals[words[2]] = temp 
+                else:
+                    new_vars[words[2]] = temp 
 
     return new_vars, returnable, new_locals
 
