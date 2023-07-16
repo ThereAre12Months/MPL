@@ -4,15 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://kit.fontawesome.com/58bf2aac9c.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/brython@3/brython.min.js">
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/brython@3/brython_stdlib.js">
-    </script>
-    <script type="text/python" src="../editor.bry"></script>
+    <script defer src="https://pyscript.net/latest/pyscript.js"></script>
+    <py-script src="../editor.py"></py-script>
     <link rel="stylesheet" href="style.css">
     <title>MPL</title>
 </head>
-<body onload="brython()">
+<body>
     <center><h2 id="title">MPL Online code editor</h2></center>
 
     <div class="container">
@@ -21,7 +18,7 @@
             <textarea id="mpl-code"></textarea>
         </div>
         <div class="right">
-            <label><button id="executePython" onclick="onClick()"><i class="fa-solid fa-play"></i></button>OUTPUT</label>
+            <label><button id="executePython" onclick="executeCode()"><i class="fa-solid fa-play"></i></button>OUTPUT</label>
             <iframe id="output"></iframe>
         </div>
     </div>
