@@ -548,23 +548,3 @@ def interpret(path:str, isSrc=False) -> None:
 
     for l in code:
         vars, _, _ = executeLine(l, constants, vars)
-
-if __name__ == "__main__":
-    import argparse
-    os.system("")
-
-    if len(sys.argv) > 1:
-        parser = argparse.ArgumentParser(
-                        prog="MPLC Interpreter",
-                        description="This program executes .mplc files")
-        
-        parser.add_argument("name", metavar="name", help="the path to the file to execute")
-
-        args = parser.parse_args()
-
-        file_path = args.name
-
-    else:
-        file_path = input("Enter the path to the file that you want to execute.\n>")
-
-    interpret(file_path)
