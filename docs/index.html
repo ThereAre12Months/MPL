@@ -3,17 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://kit.fontawesome.com/58bf2aac9c.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="style.css">
     <title>MPL</title>
 </head>
 <body>
-    <h1>MPL Online code editor</h1>
+    <center><h2>MPL Online code editor</h2></center>
 
     <div class="container">
         <div class="left">
-            <label>MPL</label>
+            <label><i class="fa-solid fa-code"></i>MPL</label>
             <textarea id="mpl-code"></textarea>
         </div>
-        <div class="right"></div>
+        <div class="right">
+            <label><button>Play</button><i class="fa-solid fa-play"></i>OUTPUT</label>
+            <iframe id="output"></iframe>
+        </div>
     </div>
 </body>
 </html>
