@@ -506,8 +506,11 @@ def toBytecode(lines):
 
     return bc
 
-def compile(path, ignore, doWrite=True, doDebug=False):
-    src = read_src(path)
+def compile(path, ignore, doWrite=True, doDebug=False, isCode=False):
+    if isCode:
+        src = path
+    else:
+        src = read_src(path)
 
     src = " " + src + " "
 
