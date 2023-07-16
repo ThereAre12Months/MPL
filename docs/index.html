@@ -5,6 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://kit.fontawesome.com/58bf2aac9c.js" crossorigin="anonymous"></script>
     <script defer src="https://pyscript.net/latest/pyscript.js"></script>
+    <py-env>
+        paths
+            ./compiler.py 
+            ./interpreter.py 
+            ./mpl.py
+            ./editor.py
+    </py-env>
+
+    <py-script src="./compiler.py"></py-script>
+    <py-script src="./interpreter.py"></py-script>
+    <py-script src="./mpl.py"></py-script>
     <py-script src="./editor.py"></py-script>
     <link rel="stylesheet" href="style.css">
     <title>MPL</title>
@@ -18,8 +29,8 @@
             <textarea id="mpl-code"></textarea>
         </div>
         <div class="right">
-            <label><button id="executePython" onclick="executeCode()"><i class="fa-solid fa-play"></i></button>OUTPUT</label>
-            <iframe id="output"></iframe>
+            <label><button id="theButton" pys-Onclick="onClick"><i class="fa-solid fa-play"></i></button>OUTPUT</label>
+            <p id="output"></p>
         </div>
     </div>
     <script>

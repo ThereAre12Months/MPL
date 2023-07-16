@@ -1,3 +1,3 @@
 import mpl 
 def onClick():
-    print(mpl.executeCode('out("Hello!")'))
+    pyscript.write("output", mpl.executeCode('out("Hello!")'))

@@ -1,3 +1,5 @@
+import os, sys
+
 class Exact:
     def __init__(self, val):
         if type(val) == int:
@@ -570,43 +572,3 @@ def compile(path, ignore, doWrite=True, doDebug=False, isCode=False):
 def setGlobals():
     global debug, ignore_warnings, empty_lines
     debug = ignore_warnings = empty_lines = False
-
-if __name__ == "__main__":
-    import sys, argparse, os
-    global debug, ignore_warnings, empty_lines
-    os.system("")
-
-    if len(sys.argv) > 1:
-        parser = argparse.ArgumentParser(
-                        prog="MPL Compiler",
-                        description="This program compiles .mpl files to .mplc files")
-        
-        parser.add_argument("name", metavar="name", help="the path to the file to compile")
-        parser.add_argument("-i", "--include", help="include extra files in the compiled build", type=str, nargs="+")
-        parser.add_argument("-d", "--debug", help="gives debug information while compiling if active", action="store_true")
-        parser.add_argument("-e", "--emptylines", help="includes empty lines in final build", action="store_true")
-        parser.add_argument("-w", "--warnings", help="ignores warnings when set", action="store_true")
-
-        args = parser.parse_args()
-
-        file_path = args.name
-        include = args.include
-        if include == None:
-            include = []
-        debug = args.debug
-        ignore_warnings = args.warnings
-        empty_lines = args.emptylines
-
-    else:
-        file_path = input("Enter the path to the file that you want to compile.\n>")
-        include = []
-        if input("Do you want to include other files in the compiled build? [y/n]\n>").lower() == "y":
-            more = True
-            while more:
-                include.append(input("Enter the path to the file that you want to include.\n>"))
-                more = input("Do you want to include more files? [y/n]\n>").lower() == "y"
-        debug = input("Do you want debug information to display during compilation? [y/n]\n>").lower() == "y"
-        ignore_warnings = False
-        empty_lines = False
-
-    compile(file_path, include)
