@@ -8,6 +8,7 @@
 body {
     background: #454545;
     color: #fff;
+    overflow: hidden;
 }
 
 .container {
