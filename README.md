@@ -127,7 +127,7 @@ repeat 15 {
 And once again variables created inside the repeat loop are local.
 
 ### Loop loops
-Loop loops are simply loops that run indefinitely. In the current version of MPL there is no way to exit the loop exept crashing/exiting the program (a nicer way is coming).
+Loop loops are simply loops that run indefinitely. In the current version of MPL there is no way to exit the loop except crashing/exiting the program (a nicer way is coming).
 ```rust
 loop {
     out("This will never stop!")
