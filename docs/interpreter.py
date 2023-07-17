@@ -49,7 +49,7 @@ class Funcs:
         match funcname:
             case "out":
                 prev = Element("output").element.contentDocument.body.innerHTML
-                prev += f"<p><b>{' '.join(vals)}</p>"
+                prev += f"<p>{' '.join(vals)}</p>"
                 Element("output").element.contentDocument.body.innerHTML = prev
 
             case "in":
