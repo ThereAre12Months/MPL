@@ -1,4 +1,5 @@
 import os, sys
+from pyscript import js
 
 class Exact:
     def __init__(self, val):

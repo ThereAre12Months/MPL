@@ -55,6 +55,7 @@ class Funcs:
             case "in":
                 prev = Element("output").element.contentDocument.body.innerHTML
                 prev += f"<p>{vals[0]}</p>"
+                Element("output").element.contentDocument.body.innerHTML = prev
                 returnable = Value(str, js.prompt(vals[0]))
 
             case "type":
