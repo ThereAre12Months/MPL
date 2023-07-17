@@ -31,21 +31,8 @@
         </div>
         <div class="right">
             <label><button id="theButton" type="button" class="py-button"  py-click="buttonClick()"><i class="fa-solid fa-play"></i></button>OUTPUT</label>
-            <p id="output"></p>
+            <iframe id="output"></iframe>
         </div>
     </div>
-    <script>
-        function executeCode() {
-            let mplCode = document.getElementById("mpl-code").value
-            let output = document.getElementById("output");
-            let outputContents = `
-            <% 
-            import mpl
-            mpl.executeCode('out("Hello");')
-            %>
-            `
-            output.contentDocument.body.innerHTML = outputContents;
-        }
-    </script>
 </body>
 </html>
