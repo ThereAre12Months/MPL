@@ -3,4 +3,4 @@ def buttonClick():
     code = Element("mpl-code").element.value
     result = executeCode(code)
 
-print("v2.0")
+print("v2.1")
