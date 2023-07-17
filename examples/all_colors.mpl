@@ -1,3 +1,5 @@
+//show all colors on the display on at a time
+
 setup(640, 480);
 title("All colors!");
 
