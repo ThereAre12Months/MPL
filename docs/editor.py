@@ -1,5 +1,5 @@
 def buttonClick():
     print("this works")
-    print("output", executeCode('out("Hello!")'))
+    pyscript.write("output", executeCode('out("Hello!")'))
 
-print("v1.4")
+print("v1.5")
