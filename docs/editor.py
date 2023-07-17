@@ -1,5 +1,7 @@
 def buttonClick():
     print("this works")
-    pyscript.write("output", executeCode('out("Hello!")'))
+    code = Element("mpl-code").element.value
 
-print("v1.5")
+    pyscript.write("output", executeCode(code))
+
+print("v1.6")
