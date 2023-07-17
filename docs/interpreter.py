@@ -48,7 +48,9 @@ class Funcs:
 
         match funcname:
             case "out":
-                returnable = Value(None, print(*vals))
+                prev = Element("output").element.contentDocument.body.innerHTML
+                prev += f"<p><b>{' '.joint(vals)}</p>"
+                Element("output").element.contentDocument.body.innerHTML = prev
 
             case "in":
                 returnable = Value(str, input(vals[0]))
