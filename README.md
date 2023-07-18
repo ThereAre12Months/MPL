@@ -144,10 +144,16 @@ Just kidding I haven't implemented nor am I planning to implement froot loops. (
 ### If statement
 You can create if statements by using the `if` keyword followed by a condition and a codeblock.
 ```rust
-if (age < 21) {
-    out("Sorry, no whisky for you!");
+if (mood == "singing") {
+    out("If you're happy and you know it clap your hands. clap clap...");
 };
 ```
 And like I have said many times before, variables created inside of an if statement are local.
 
 Elif/else are yet to be implemented.
+
+## Graphics
+
+### Basics
+
+In MPL you can create a new window with the `setup()` function. 
