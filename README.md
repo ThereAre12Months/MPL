@@ -154,6 +154,20 @@ Elif/else are yet to be implemented.
 
 ## Graphics
 
+**Note that graphics don't work with the online terminal.**
+
 ### Basics
 
-In MPL you can create a new window with the `setup()` function. 
+In MPL you can create a new window with the `setup()` function. The `setup()` function takes 2 arguments: the intitial width and height of the window.
+You can also change the title of the window with the `title()` function with the new title as the only argument. 
+
+A lot of functions that draw something onto the window need a color argument. For that there is a specific color datatype that can be created by using the `color()` function. Eg. `circle(x, y, r, &color(0, 255, 255));` or `let color color(255);`
+
+Clearing the screen is done by 
+
+### Simple shapes
+
+Drawing single pixels : `pixel(x, y, color);`  
+Drawing circles       : `circle(x, y, r, color);`  
+Drawing rectangles    : `rect(x, y, w, h, color);`  
+Drawing lines         : `line(x1, y1, x2, y2, w, color);`  
