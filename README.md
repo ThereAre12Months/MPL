@@ -21,6 +21,10 @@ You can find an online code editor for mpl at <https://thereare12months.github.i
 3.5 [Froot loops](#froot-loops)
 4. [Conditionals](#conditionals)  
 4.1 [If](#if-statement)
+5. [Graphics](#graphics)  
+5.1 [Basics](#basics)  
+5.2 [Simple shapes](#simple-shapes)  
+5.3 [Images](#images)
 
 ## Variables
 ### Variable Declaration
@@ -171,3 +175,11 @@ Drawing single pixels : `pixel(x, y, color);`
 Drawing circles       : `circle(x, y, r, color);`  
 Drawing rectangles    : `rect(x, y, w, h, color);`  
 Drawing lines         : `line(x1, y1, x2, y2, w, color);`  
+
+### Images
+
+You can load images with the `loadImg()` function. Simply give the path to the image as argument.  
+Eg. `let playerImg loadImg("assets/imgs/player.png");`
+
+Blitting the image to the main window is done with the `blit()` function.   
+Eg. `blit(img, x, y);`
