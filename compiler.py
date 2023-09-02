@@ -506,6 +506,15 @@ def toBytecode(lines):
 
     return bc
 
+def removeComments(src):
+    lines:list[str] = src.splitlines()
+    new_lines = []
+    for line in lines:
+        if not ("//" in line or line in ("", " ")):
+            new_lines.append(line)
+
+    return "\n".join(new_lines)
+
 def compile(path, ignore, doWrite=True, doDebug=False, isCode=False):
     if isCode:
         src = path
@@ -513,6 +522,10 @@ def compile(path, ignore, doWrite=True, doDebug=False, isCode=False):
         src = read_src(path)
 
     src = " " + src + " "
+
+    info("Removing comments...")
+    src = removeComments(src)
+    succes("Removed all comments!")
 
     info("Finding literals...")
 

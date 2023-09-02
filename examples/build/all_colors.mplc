@@ -1,0 +1,29 @@
+STR: All colors!
+INT: 640
+INT: 480
+INT: 0
+INT: 0
+INT: 0
+INT: 256
+INT: 0
+INT: 256
+INT: 0
+INT: 256
+INT: 1
+INT: 1
+INT: 1
+BRACKETS: (red, green, blue)
+FNREF: CALL color $14 
+BRACKETS: ( $1 ,  $2 )
+BRACKETS: ( $0 )
+BRACKETS: ( $15 )
+CODE: ['CALL fill $18', 'ADDTO blue $11']
+CODE: ['SET blue $9', 'RPT $10 $19', 'ADDTO green $12']
+CODE: ['SET green $7', 'RPT $8 $20', 'ADDTO red $13']
+__________START_OF_CODE__________
+CALL setup $16
+CALL title $17
+CREATE red $3
+CREATE green $4
+CREATE blue $5
+RPT $6 $21

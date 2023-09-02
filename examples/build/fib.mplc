@@ -1,13 +1,10 @@
 INT: 0
 INT: 1
-INT: 0
 INT: 15
-INT: 1
 BRACKETS: (a)
-CODE: ['SWITCH a b', 'ADDTO b a', 'CALL out $5', 'ADDTO count $4']
+CODE: ['SWITCH a b', 'ADDTO b a', 'CALL out $3']
 __________START_OF_CODE__________
 CREATE a $0
 CREATE b $1
-CALL out $5
-CREATE count $2
-RPT $3 $6
+CALL out $3
+RPT $2 $4
