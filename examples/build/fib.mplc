@@ -1,6 +1,6 @@
 INT: 0
 INT: 1
-INT: 15
+INT: 20
 BRACKETS: (a)
 CODE: ['SWITCH a b', 'ADDTO b a', 'CALL out $3']
 __________START_OF_CODE__________

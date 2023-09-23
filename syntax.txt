@@ -86,6 +86,6 @@ fn fib(depth, a, b)
     int i b;
     int j a+b;
     return fib(depth-1);
-}
+};
 
 print(fib(15, 0, 1));

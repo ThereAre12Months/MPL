@@ -34,7 +34,7 @@ class Value:
 
 class Funcs:
     def isBuiltin(funcname:str) -> bool:
-        return funcname in ["nothing", "out", "in", "type", "toInt", "toStr", "toFloat", "toBool", "toArray", "sleep", "time", "setup", "title", "color", "fill", "pixel", "circle", "mouseX", "mouseY", "update"]
+        return funcname in ["nothing", "out", "in", "type", "toInt", "toStr", "toFloat", "toBool", "toArray", "sleep", "time", "setup", "title", "color", "fill", "pixel", "rect", "circle", "mouseX", "mouseY", "update"]
     
     def runBuiltin(funcname:str, args:list, consts:list, vars:dict, local_vars:dict={}, isLocal:bool=False) -> tuple[dict, any]:
         returnable = Value(None, None)
@@ -112,6 +112,9 @@ class Funcs:
 
             case "circle":
                 pg.draw.circle(pg.display.get_surface(), vals[3], (vals[0], vals[1]), vals[2])
+
+            case "rect":
+                pg.draw.rect(pg.display.get_surface(), vals[4], (vals[0], vals[1], vals[2], vals[3]))
 
             case "mouseX":
                 returnable = Value(int, pg.mouse.get_pos()[0])
@@ -466,9 +469,15 @@ def executeLine(line:str, consts:list, vars:dict, local_vars:dict = {}, isLocal:
 
             else:
                 if words[1] in new_vars.keys():
-                    new_vars, returnable = Funcs.runCustom(new_vars[words[1]].v[1], Funcs.parseNamedArgs(new_vars[words[1]].v[0], Funcs.getValue(words[2], consts, new_vars, new_locals, isLocal), consts, new_vars, new_locals, isLocal), consts, new_vars)
+                    if new_vars[words[1]].t == codeblock:
+                        new_vars, returnable = Funcs.runCustom(new_vars[words[1]], {}, consts, new_vars)
+                    else:
+                        new_vars, returnable = Funcs.runCustom(new_vars[words[1]].v[1], Funcs.parseNamedArgs(new_vars[words[1]].v[0], Funcs.getValue(words[2], consts, new_vars, new_locals, isLocal), consts, new_vars, new_locals, isLocal), consts, new_vars)
                 elif words[1] in new_locals.keys():
-                    new_locals, returnable = Funcs.runCustom(new_locals[words[1]].v[1], Funcs.parseNamedArgs(new_locals[words[1]].v[0], Funcs.getValue(words[2], consts, new_vars, new_locals, isLocal), consts, new_vars, new_locals, isLocal), consts, new_vars)
+                    if new_locals[words[1]].t == codeblock:
+                        new_locals, returnable = Funcs.runCustom(new_locals[words[1]], {}, consts, new_locals)
+                    else:
+                        new_locals, returnable = Funcs.runCustom(new_locals[words[1]].v[1], Funcs.parseNamedArgs(new_locals[words[1]].v[0], Funcs.getValue(words[2], consts, new_vars, new_locals, isLocal), consts, new_vars, new_locals, isLocal), consts, new_vars)
                 else:
                     error(f"Function '{words[1]}' does not exist!")
 
@@ -515,6 +524,15 @@ def executeLine(line:str, consts:list, vars:dict, local_vars:dict = {}, isLocal:
                 new_locals.update({words[1] : Value(type(old_val), old_val.v + other_val.v)})
             elif words[1] in new_vars.keys():
                 new_vars.update({words[1] : Funcs.getValue(Funcs.getInnerValue(new_vars[words[1]], consts, new_vars, new_locals, isLocal) + Funcs.getInnerValue(Funcs.getValue(words[2], consts, new_vars, new_locals, isLocal)), consts, new_vars, new_locals, isLocal)})
+
+        case "SUBFROM":
+            if isLocal and words[1] in new_locals.keys():
+                old_val = new_locals[words[1]]
+                other_val = Funcs.getValue(words[2], consts, new_vars, new_locals, isLocal)
+
+                new_locals.update({words[1] : Value(type(old_val), old_val.v - other_val.v)})
+            elif words[1] in new_vars.keys():
+                new_vars.update({words[1] : Funcs.getValue(Funcs.getInnerValue(new_vars[words[1]], consts, new_vars, new_locals, isLocal) - Funcs.getInnerValue(Funcs.getValue(words[2], consts, new_vars, new_locals, isLocal)), consts, new_vars, new_locals, isLocal)})
 
         case "SWITCH":
             if isLocal and words[1] in new_locals.keys():

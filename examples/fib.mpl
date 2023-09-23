@@ -5,7 +5,7 @@ let b 1;
 
 out(a);
 
-repeat 15 {
+repeat 20 {
     a <-> b;
     b += a;
     out(a);
