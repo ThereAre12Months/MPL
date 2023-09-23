@@ -39,8 +39,10 @@ let code_block {
     let name in("What's your name? ");
     out(("Hello " + name + "!"));
 };
+
+code_block();
 ```
-Codeblocks can be seen as functions without arguments. Though in the current version of MPL codeblocks can't be executed directly yet.
+Codeblocks can be seen as functions without arguments.
 
 To indicate the type of the value being given to the variable certain annotations can be used.
 ```rust
