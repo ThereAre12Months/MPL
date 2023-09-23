@@ -1,8 +1,0 @@
-HIGH PRIORITY
-    /
-
-MEDIUM PRIORITY
-    graphics
-
-LOW PRIORITY
-    recursive function references

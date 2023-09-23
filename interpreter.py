@@ -1,6 +1,7 @@
 import sys, time, os
 
 doGraphics = False
+clock = None
 
 class operator:
     pass
@@ -34,7 +35,7 @@ class Value:
 
 class Funcs:
     def isBuiltin(funcname:str) -> bool:
-        return funcname in ["nothing", "out", "in", "type", "toInt", "toStr", "toFloat", "toBool", "toArray", "sleep", "time", "setup", "title", "color", "fill", "pixel", "rect", "circle", "mouseX", "mouseY", "update"]
+        return funcname in ["nothing", "out", "in", "type", "toInt", "toStr", "toFloat", "toBool", "toArray", "sleep", "time", "setup", "fps", "title", "color", "fill", "pixel", "rect", "circle", "text", "mouseX", "mouseY", "update"]
     
     def runBuiltin(funcname:str, args:list, consts:list, vars:dict, local_vars:dict={}, isLocal:bool=False) -> tuple[dict, any]:
         returnable = Value(None, None)
@@ -79,13 +80,17 @@ class Funcs:
                 returnable = Value(int, time.time())
 
             case "setup":
-                global doGraphics
+                global doGraphics, clock
                 os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
                 doGraphics = True
                 global pg 
                 import pygame as pg
                 pg.init()
+                clock = pg.time.Clock()
                 returnable = Value(pg.Surface, pg.display.set_mode((vals[0], vals[1])))
+
+            case "fps":
+                returnable = clock.tick(vals[0])
 
             case "title":
                 pg.display.set_caption(vals[0])
@@ -115,6 +120,19 @@ class Funcs:
 
             case "rect":
                 pg.draw.rect(pg.display.get_surface(), vals[4], (vals[0], vals[1], vals[2], vals[3]))
+
+            case "text":
+                if len(vals) == 3:
+                    pg.display.get_surface().blit(pg.font.SysFont("arial", 30).render(str(vals[0]), True, (0,0,0)), (vals[1], vals[2]))
+                elif len(vals) == 4:
+                    pg.display.get_surface().blit(pg.font.SysFont("arial", 30).render(str(vals[0]), True, vals[3]), (vals[1], vals[2]))
+                elif len(vals) == 5:
+                    txt = pg.font.SysFont("arial", 30).render(str(vals[0]), True, vals[3])
+
+                    if vals[4] == "center":
+                        pg.display.get_surface().blit(txt, txt.get_rect(center = (vals[1], vals[2])))
+
+                
 
             case "mouseX":
                 returnable = Value(int, pg.mouse.get_pos()[0])

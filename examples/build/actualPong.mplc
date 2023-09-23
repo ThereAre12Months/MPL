@@ -1,31 +1,88 @@
 STR: Pong!
+STR: center
 INT: 190
 INT: 320
 INT: 240
+INT: 2
+INT: 2
+INT: 0
 INT: 640
 INT: 480
 INT: 255
-INT: 50
-INT: 5
-INT: 10
 INT: 100
+INT: 5
+INT: 30
+INT: 200
 INT: 0
-BRACKETS: ( $6 )
-FNREF: CALL color $12 
+INT: 20
+INT: 0
+INT: 0
+INT: 100
+INT: 605
+INT: 30
+INT: 200
+INT: 0
+INT: 320
+INT: 10
+INT: 0
+INT: 460
+INT: 4
+INT: 20
+INT: 4
+INT: 585
+INT: 4
+INT: 55
+INT: 200
+INT: 4
+INT: 40
+INT: 1
+INT: 320
+INT: 60
+BRACKETS: ( $10 )
+FNREF: CALL color $40 
 BRACKETS: ()
-FNREF: CALL mouseY $14 
-BRACKETS: ( $11 )
-FNREF: CALL color $16 
-BRACKETS: ( $4 ,  $5 )
+FNREF: CALL mouseY $42 
+BRACKETS: ( $15 )
+FNREF: CALL color $44 
+BRACKETS: ( $17 )
+FNREF: CALL color $46 
+BRACKETS: ( $23 )
+FNREF: CALL color $48 
+BRACKETS: (score)
+FNREF: CALL toStr $50 
+BRACKETS: ( $26 )
+FNREF: CALL color $52 
+BRACKETS: ( $8 ,  $9 )
 BRACKETS: ( $0 )
-BRACKETS: ( $13 )
-BRACKETS: ( $8 , paddleA,  $9 ,  $10 ,  $17 )
+BRACKETS: ( $41 )
+BRACKETS: ( $12 , paddleA,  $13 ,  $14 ,  $45 )
+BRACKETS: (ballX, ballY,  $16 ,  $47 )
+BRACKETS: ( $20 , paddleB,  $21 ,  $22 ,  $49 )
+BRACKETS: ( $51 ,  $24 ,  $25 ,  $53 ,  $1 )
+BRACKETS: (ballY >  $27 )
+BRACKETS: (ballY <  $29 )
+BRACKETS: (ballX >  $31 )
+BRACKETS: (ballX <  $33 )
+BRACKETS: (ballY > paddleA)
+BRACKETS: (ballY < end)
+BRACKETS: (ballX <  $36 )
 BRACKETS: ()
-CODE: ['CALL fill $20', 'SET paddleA $15', 'SUBFROM paddleA $7', 'CALL rect $21', 'CALL update $22']
+BRACKETS: ( $39 )
+CODE: ['SUBFROM ballSY $28']
+CODE: ['ADDTO ballSY $30']
+CODE: ['SUBFROM ballSX $32']
+CODE: ['ADDTO ballSX $35']
+CODE: ['CREATE end paddleA', 'ADDTO end $34', 'IF $66 $73']
+CODE: ['IF $65 $74']
+CODE: ['ADDTO score $37', 'SET ballX $38']
+CODE: ['CALL fill $56', 'SET paddleA $43', 'SUBFROM paddleA $11', 'CALL rect $57', 'CALL circle $58', 'CREATE paddleB $18', 'SET paddleB ballY', 'SUBFROM paddleB $19', 'CALL rect $59', 'CALL text $60', 'ADDTO ballX ballSX', 'ADDTO ballY ballSY', 'IF $61 $70', 'IF $62 $71', 'IF $63 $72', 'IF $64 $75', 'IF $67 $76', 'CALL update $68', 'CALL fps $69']
 __________START_OF_CODE__________
-CREATE paddleA $1
-CREATE ballX $2
-CREATE ballY $3
-CALL setup $18
-CALL title $19
-LOOP $23
+CREATE paddleA $2
+CREATE ballX $3
+CREATE ballY $4
+CREATE ballSX $5
+CREATE ballSY $6
+CREATE score $7
+CALL setup $54
+CALL title $55
+LOOP $77
