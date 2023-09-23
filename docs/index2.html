@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://pyscript.net/latest/pyscript.css" />
+    <script src="https://kit.fontawesome.com/58bf2aac9c.js" crossorigin="anonymous"></script>
+    <script defer src="https://pyscript.net/latest/pyscript.js"></script>
+    <py-config>
+        terminal = false
+    </py-config>
+    <py-env>
+        paths
+            ./compiler.py 
+            ./interpreter.py 
+            ./mpl.py
+            ./editor.py
+    </py-env>
+
+    <py-script src="./compiler.py"></py-script>
+    <py-script src="./interpreter.py"></py-script>
+    <py-script src="./mpl.py"></py-script>
+    <py-script src="./editor.py"></py-script>
+    <link rel="stylesheet" href="style.css">
+    <title>MPL</title>
+</head>
+<body>
+    <center><h2 id="title">MPL Online code editor</h2></center>
+
+    <div class="container">
+        <div class="left">
+            <label><i class="fa-solid fa-code"></i>MPL</label>
+            <textarea id="mpl-code"></textarea>
+        </div>
+        <div class="right">
+            <label><button id="theButton" type="button" class="py-button"  py-click="buttonClick()"><i class="fa-solid fa-play"></i></button>OUTPUT</label>
+            <iframe id="output"></iframe>
+        </div>
+    </div>
+</body>
+</html>
