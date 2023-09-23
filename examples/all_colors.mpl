@@ -1,4 +1,4 @@
-//show all colors on the display on at a time
+//show all colors on the display one at a time
 
 setup(640, 480);
 title("All colors!");
@@ -12,6 +12,7 @@ repeat 256 {
         blue = 0;
         repeat 256 {
             fill(&color(red, green, blue));
+            update();
             blue += 1;
         };
         green += 1;
