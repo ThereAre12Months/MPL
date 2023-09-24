@@ -21,6 +21,9 @@ class functionReference:
 class color:
     pass
 
+class OpMsg:
+    pass
+
 class Value:
     def __init__(self, type_, value) -> None:
         self.t = type_ 
@@ -35,7 +38,7 @@ class Value:
 
 class Funcs:
     def isBuiltin(funcname:str) -> bool:
-        return funcname in ["nothing", "out", "in", "type", "toInt", "toStr", "toFloat", "toBool", "toArray", "sleep", "time", "setup", "fps", "title", "color", "fill", "pixel", "rect", "circle", "text", "mouseX", "mouseY", "update"]
+        return funcname in ["nothing", "exit", "out", "in", "type", "toInt", "toStr", "toFloat", "toBool", "toArray", "sleep", "time", "setup", "fps", "title", "color", "fill", "pixel", "rect", "circle", "text", "mouseX", "mouseY", "update"]
     
     def runBuiltin(funcname:str, args:list, consts:list, vars:dict, local_vars:dict={}, isLocal:bool=False) -> tuple[dict, any]:
         returnable = Value(None, None)
@@ -48,6 +51,9 @@ class Funcs:
             tps.append(a.t)
 
         match funcname:
+            case "exit":
+                returnable = Value(OpMsg, "exit")
+
             case "out":
                 returnable = Value(None, print(*vals))
 
@@ -152,6 +158,10 @@ class Funcs:
 
         for line in new_code:
             new_vars, returnable, local_vars = executeLine(line, consts, new_vars, local_vars=local_vars, isLocal=True)
+
+            if type(returnable) == Value and returnable.t == OpMsg:
+                if returnable.v == "exit":
+                    return new_vars, Value(None, None)
 
         return new_vars, returnable
     
@@ -277,6 +287,8 @@ class Funcs:
                 error(f"Variable {v} does not exist!")
         elif type(v) == int:
             return Value(int, v)
+        elif type(v) == float:
+            return Value(float, v)
         elif type(v) == Value:
             return v
         else:
@@ -482,6 +494,8 @@ def executeLine(line:str, consts:list, vars:dict, local_vars:dict = {}, isLocal:
                 new_vars, _ = Funcs.runCustom(Funcs.getValue(words[1], consts, new_vars, new_locals, isLocal), {}, consts, new_vars)
         
         case "CALL":
+            returnable = Value(None, None)
+
             if Funcs.isBuiltin(words[1]):
                 new_vars, returnable = Funcs.runBuiltin(words[1], Funcs.parseArgs(Funcs.getValue(words[2], consts, new_vars, new_locals, isLocal), consts, new_vars, new_locals, isLocal), consts, new_vars, new_locals, isLocal)
 
@@ -498,6 +512,16 @@ def executeLine(line:str, consts:list, vars:dict, local_vars:dict = {}, isLocal:
                         new_locals, returnable = Funcs.runCustom(new_locals[words[1]].v[1], Funcs.parseNamedArgs(new_locals[words[1]].v[0], Funcs.getValue(words[2], consts, new_vars, new_locals, isLocal), consts, new_vars, new_locals, isLocal), consts, new_vars)
                 else:
                     error(f"Function '{words[1]}' does not exist!")
+
+            if returnable.t == OpMsg:
+                if returnable.v == "exit":
+                    if not isLocal:
+                        if doGraphics:
+                            pg.quit()
+                        sys.exit()
+                    else:
+                        pass
+            
 
         case "FNTOVAR":
             if Funcs.isBuiltin(words[1]):
@@ -551,6 +575,25 @@ def executeLine(line:str, consts:list, vars:dict, local_vars:dict = {}, isLocal:
                 new_locals.update({words[1] : Value(type(old_val), old_val.v - other_val.v)})
             elif words[1] in new_vars.keys():
                 new_vars.update({words[1] : Funcs.getValue(Funcs.getInnerValue(new_vars[words[1]], consts, new_vars, new_locals, isLocal) - Funcs.getInnerValue(Funcs.getValue(words[2], consts, new_vars, new_locals, isLocal)), consts, new_vars, new_locals, isLocal)})
+
+        case "MULBY":
+            if isLocal and words[1] in new_locals.keys():
+                old_val = new_locals[words[1]]
+                other_val = Funcs.getValue(words[2], consts, new_vars, new_locals, isLocal)
+
+                new_locals.update({words[1] : Value(type(old_val), old_val.v * other_val.v)})
+            elif words[1] in new_vars.keys():
+                new_vars.update({words[1] : Funcs.getValue(Funcs.getInnerValue(new_vars[words[1]], consts, new_vars, new_locals, isLocal) * Funcs.getInnerValue(Funcs.getValue(words[2], consts, new_vars, new_locals, isLocal)), consts, new_vars, new_locals, isLocal)})
+
+        case "DIVBY":
+            if isLocal and words[1] in new_locals.keys():
+                old_val = new_locals[words[1]]
+                other_val = Funcs.getValue(words[2], consts, new_vars, new_locals, isLocal)
+
+                new_locals.update({words[1] : Value(type(old_val), old_val.v / other_val.v)})
+            elif words[1] in new_vars.keys():
+                new_vars.update({words[1] : Funcs.getValue(Funcs.getInnerValue(new_vars[words[1]], consts, new_vars, new_locals, isLocal) / Funcs.getInnerValue(Funcs.getValue(words[2], consts, new_vars, new_locals, isLocal)), consts, new_vars, new_locals, isLocal)})
+
 
         case "SWITCH":
             if isLocal and words[1] in new_locals.keys():
