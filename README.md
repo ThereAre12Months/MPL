@@ -55,6 +55,8 @@ codeblocks  let hello { out("Hello world!"); };
 
 The scope where a variable is created matters. Variables created in the `main` scope are `global` and can be used everywhere in the code. Variables created in any other scope are `local` and can only be used in its specific scope.
 
+You can override this default behaviour by using the `var` keyword instead of `let` to force the variable to be `global`.
+
 ### Variable manipulation
 Variables can be manipulated in many ways like other languages.
 
@@ -71,6 +73,7 @@ a += 5;
 a -= b;
 a *= f1.125;
 a /= 19;
+a %= 3;
 ```
 
 ### Variable accessing
@@ -167,9 +170,9 @@ Elif/else are yet to be implemented.
 In MPL you can create a new window with the `setup()` function. The `setup()` function takes 2 arguments: the intitial width and height of the window.
 You can also change the title of the window with the `title()` function with the new title as the only argument. 
 
-A lot of functions that draw something onto the window need a color argument. For that there is a specific color datatype that can be created by using the `color()` function. Eg. `circle(x, y, r, &color(0, 255, 255));` or `let color color(255);`
+A lot of functions that draw something onto the window need a color argument. For that there is a specific `color` type that can be created by using the `color()` function. Eg. `circle(x, y, r, &color(0, 255, 255));` or `let color color(255);`
 
-Clearing the screen is done by 
+Clearing the screen is done by calling the `fill` function with a `color` as only argument.
 
 ### Simple shapes
 
