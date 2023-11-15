@@ -1,4 +1,4 @@
-import codeStructure as cs
+#import codeStructure as cs
 
 class Vars:
     def __init__(self):
@@ -40,6 +40,9 @@ class String:
     def __init__(self, val:str):
         self.val = str(val)
 
+    def __repr__(self):
+        return f"String: {self.val}"
+
     def _copy(self):
         return String(self.val)
 
@@ -69,6 +72,9 @@ class String:
 class Int:
     def __init__(self, val:int):
         self.val = int(val)
+
+    def __repr__(self):
+        return f"Int: {self.val}"
 
     def _copy(self):
         return Int(self.val)
@@ -114,6 +120,9 @@ class Float:
     def __init__(self, val:float):
         self.val = float(val)
 
+    def __repr__(self):
+        return f"Float {self.val}"
+
     def _copy(self):
         return Float(self.val)
     
@@ -137,6 +146,9 @@ class Float:
 class Bool:
     def __init__(self, val:bool):
         self.val = bool(val)
+
+    def __repr__(self):
+        return f"Bool: {'true' if self.val else 'false'}"
 
     def _copy(self):
         return Bool(self.val)
