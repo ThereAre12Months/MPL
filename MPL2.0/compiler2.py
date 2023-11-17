@@ -1,6 +1,53 @@
 import datatypes as dt
 import codeStructure as cs
 
+# CONSTANTS
+splittable = list(" ,:;()[]{}+-*/%!=<>\n\t")
+
+class Operator:
+    def __init__(self, type_):
+        self.t = type_
+
+    def __repr__(self):
+        return f"Op: {self.t}"
+    
+    @staticmethod
+    def isOperator(word):
+        operators = list("+-*/%<>=") + [
+            "==",
+            "<=",
+            ">=",
+            "!=",
+            "**",
+            "//"
+        ]
+
+        return word in operators
+
+class Keyword:
+    def __init__(self, name):
+        self.name = name
+
+    def __repr__(self):
+        return f"Keyword: {self.name}"
+
+    @staticmethod
+    def isKeyword(word):
+        keywords   = [
+            # if-elif-else
+            "if",
+            # loops
+            "while",
+            "until",
+            "repeat",
+            "loop",
+            # variables
+            "let",
+            "var"
+        ]
+
+        return word in keywords
+
 class Reference:
     def __init__(self, num):
         self.num = num
@@ -53,7 +100,7 @@ def getLiterals(source):
             temp_int += char
                 
         else:
-            if i == 0 or char in list(" ,:;()[]{}+-*/%!=<>"):
+            if i == 0 or char in splittable:
                 canInt = True
             else:
                 canInt = False
@@ -115,19 +162,88 @@ def split_lines(source):
     for i in source:
         if i == ";":
             if temp != [" "] and temp != []:
-                list_.append(temp)
+                trimmed = trim_line(temp)
+                if len(trimmed) > 0:
+                    list_.append(trimmed)
             temp = []
         else:
             temp.append(i)
 
     return list_
 
-def trim_lines(source):
-    pass
+def trim_line(source:list|tuple):
+    copy = source.copy()
+
+    while len(copy) > 0 and copy[0] in (" ", "\t", "\n"):
+        copy.pop(0)
+
+    while len(copy) > 0 and copy[-1] in (" ", "\t", "\n"):
+        copy.pop(-1)
+
+    return copy
+
+def trim_str(source:str):
+    return "".join(trim_line(list(source)))
+
+def getVars(source:list|tuple):
+    new = []
+
+    temp = ""
+    for i in source:
+        if i in splittable or type(i) != str:
+            trimmed = trim_str(temp)
+            if trimmed != "":
+                if Keyword.isKeyword(trimmed):
+                    new.append(Keyword(trimmed))
+                else:
+                    new.append(dt.Variable(trimmed))
+            temp = ""
+            new.append(i)
+        else:
+            temp += i
+
+    trimmed = trim_str(temp)
+    if trimmed != "":
+        if Keyword.isKeyword(trimmed):
+            new.append(Keyword(trimmed))
+        else:
+            new.append(dt.Variable(trimmed))
+
+    return new
+
+def getOperators(source:list|tuple):
+    new = []
+
+    temp = ""
+    for i in source:
+        if type(i) != str:
+            trimmed = trim_str(temp)
+            if trimmed != "":
+                if Operator.isOperator(trimmed):
+                    new.append(Operator(trimmed))
+                else:
+                    new += list(trimmed)
+            temp = ""
+            new.append(i)
+        else:
+            temp += i
+
+    trimmed = trim_str(temp)
+    if trimmed != "":
+        if Operator.isOperator(trimmed):
+            new.append(Operator(trimmed))
+        else:
+            new += list(trimmed)
+
+    return new
 
 def compile(code):
     c, lits = getLiterals(code + " ")
+    c = getVars(c)
+    c = getOperators(c)
+    print(lits)
     c = split_lines(c)
     for i in c:
         print(i)
+
     

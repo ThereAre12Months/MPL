@@ -36,12 +36,15 @@ class Variable:
     def __init__(self, name):
         self.name = name
 
+    def __repr__(self):
+        return f"Var: {self.name}"
+
 class String:
     def __init__(self, val:str):
         self.val = str(val)
 
     def __repr__(self):
-        return f"String: {self.val}"
+        return f"String: '{self.val}'"
 
     def _copy(self):
         return String(self.val)

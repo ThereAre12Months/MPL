@@ -1,5 +1,8 @@
 from compiler2 import compile
 
-test = 'out("Hello, world!");'
+test = """
+let name = in("What's your name? ");
+out("Hi, " +  name + "!");
+"""
 
 compile(test)
