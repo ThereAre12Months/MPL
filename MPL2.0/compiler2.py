@@ -237,10 +237,58 @@ def getOperators(source:list|tuple):
 
     return new
 
+def getBrackets(literals:list, source:list|tuple):
+    lits = literals.copy()
+    new  = source.copy()
+
+    length = len(source)
+
+    while ")" in new:
+        idx = new.index()
+
+        start_pos = 0
+        end_pos   = idx
+        current_pos = end_pos
+
+        while new[current_pos] != "(":
+            current_pos -= 1
+
+        start_pos = current_pos
+
+        bracket = new[start_pos:end_pos+1]
+        new[start_pos:end_pos+1] = Reference(len(lits))
+        lits.append()
+
+    return new, lits
+
+    # other = src 
+    # new = ""
+    # count = const_count
+    # brackets = []
+    # 
+    # while ")" in other:
+    #     idx = other.index(")")
+    # 
+    #     start_pos = 0
+    #     end_pos = idx
+    #     current_pos = end_pos 
+    # 
+    #     while other[current_pos] != "(":
+    #         current_pos -= 1
+    #     start_pos = current_pos
+    # 
+    #     bracket = other[start_pos:end_pos+1]
+    #     brackets.append("BRACKETS: " + str(bracket))
+    #     new = other.replace(bracket, " $" + str(count) + " ")
+    #     count += 1
+    # 
+    #     other = new 
+
 def compile(code):
     c, lits = getLiterals(code + " ")
     c = getVars(c)
     c = getOperators(c)
+    c, lits = getBrackets(lits, c)
     print(lits)
     c = split_lines(c)
     for i in c:

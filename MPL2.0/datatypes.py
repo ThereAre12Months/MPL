@@ -179,6 +179,27 @@ class NamedArgs:
         self.args:list|tuple = args or []
         self.kwargs:dict     = kwargs or {}
 
+class Tuple:
+    def __init__(self, args:list=None, kwargs:dict=None):
+        self.args   = args or []
+        self.kwargs = kwargs or {}
+
+    def _toString(self):
+        val = ""
+        for i in self.args:
+            if hasattr(i, "_toString"):
+                val += i._toString().val
+
+            else:
+                val += str(i)
+        return String(val)
+    
+    def _toBool(self):
+        return Bool()
+    
+    def _add(self, val):
+        pass
+
 class Codeblock:
     def __init__(self, lines:list|tuple|None=None):
         self.lines = lines or []
@@ -210,8 +231,8 @@ class Function:
 
         return argsDict | kwargsDict
 
-    def _call(self, vars:Vars, args:list|tuple, kwargs:dict):
-        startVars = self._match(args, kwargs)
+    def _call(self, vars:Vars, args:NamedArgs):
+        startVars = self._match(args.args, args.kwargs)
 
         vars.addScope(startVars=startVars)
         self.code._call(vars)
