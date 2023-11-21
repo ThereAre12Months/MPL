@@ -69,7 +69,7 @@ class BinOp:
         val1 = Tools.getGenericVal(self.v1, vars)
         val2 = Tools.getGenericVal(self.v2, vars)
 
-        if self.t == "add":
+        if self.t == "+":
             sol = NotImplemented
             if hasattr(val1, "_add"):
                 sol = val1._add(val2)
@@ -85,7 +85,7 @@ class BinOp:
                     
             raise Exception(f"Can't add '{type(val1).__name__}' and '{type(val2).__name__}'.")
         
-        elif self.t == "sub":
+        elif self.t == "-":
             sol = NotImplemented
             if hasattr(val1, "_sub"):
                 sol = val1._sub(val2)
@@ -95,7 +95,7 @@ class BinOp:
                     
             raise Exception(f"Can't subtract '{type(val2).__name__}' from '{type(val1).__name__}'.")
 
-        elif self.t == "mul":
+        elif self.t == "*":
             sol = NotImplemented
             if hasattr(val1, "_mul"):
                 sol = val1._mul(val2)
@@ -111,7 +111,7 @@ class BinOp:
                     
             raise Exception(f"Can't multiply '{type(val1).__name__}' and '{type(val2).__name__}'.")
         
-        elif self.t == "div":
+        elif self.t == "/":
             sol = NotImplemented
             if hasattr(val1, "_div"):
                 sol = val1._div(val2)
@@ -121,7 +121,7 @@ class BinOp:
                     
             raise Exception(f"Can't divide '{type(val2).__name__}' from '{type(val1).__name__}'.")
         
-        elif self.t == "mod":
+        elif self.t == "%":
             sol = NotImplemented
             if hasattr(val1, "_mod"):
                 sol = val1._mod(val2)
@@ -131,7 +131,7 @@ class BinOp:
                     
             raise Exception(f"Can't take the mod of '{type(val2).__name__}' and '{type(val1).__name__}'.")
         
-        elif self.t == "pow":
+        elif self.t == "**":
             sol = NotImplemented
             if hasattr(val1, "_pow"):
                 sol = val1._pow(val2)
@@ -141,19 +141,20 @@ class BinOp:
                     
             raise Exception(f"Can't take the power of '{type(val2).__name__}' and '{type(val1).__name__}'.")
         
-        elif self.t == "eq":
+        elif self.t == "==":
             if hasattr(val1, "_eq"):
                 return val1._eq(val2)
             if hasattr(val2, "_eq"):
                 return val2._eq(val1)
             return Bool(False)
         
-        elif self.t == "neq":
+        elif self.t == "!=":
             if hasattr(val1, "_eq"):
                 return Bool(not val1._eq(val2).val)
             if hasattr(val2, "_eq"):
                 return Bool(not val2._eq(val1).val)
             return Bool(True)
+
 
 class Conditional:
     def __init__(self, op:UnOp|BinOp):

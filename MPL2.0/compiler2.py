@@ -244,7 +244,7 @@ def getBrackets(literals:list, source:list|tuple):
     length = len(source)
 
     while ")" in new:
-        idx = new.index()
+        idx = new.index(")")
 
         start_pos = 0
         end_pos   = idx
@@ -256,8 +256,44 @@ def getBrackets(literals:list, source:list|tuple):
         start_pos = current_pos
 
         bracket = new[start_pos:end_pos+1]
-        new[start_pos:end_pos+1] = Reference(len(lits))
-        lits.append()
+
+        contents = []
+        temp = []
+
+        for char in bracket:
+            if char != ",":
+                temp.append(char)
+            else:
+                contents.append(trim_line(temp))
+        if trim_line(temp) != []:
+            contents.append(trim_line(temp))
+
+        new_contents = []
+        for c in contents:
+            new_c = []
+            count = 0
+
+            while count < len(c):
+                if type(c[count]) == Operator:
+                    new_c.append(cs.BinOp(c[count].t, c[count-1], c[count+1]))
+                    new_c.pop(-2)
+                    count += 1
+                else:
+                    new_c.append(c[count])
+                count += 1
+
+            new_contents.append(new_c)
+
+        if type(new[start_pos-1]) == dt.Variable
+        new[start_pos:end_pos]
+
+        # l = []
+        # 
+        # if len(bracket) == 5:
+        # 
+        # else:
+        #     new[start_pos:end_pos+1] = Reference(len(lits))
+        #     lits.append(dt.Tuple())
 
     return new, lits
 
@@ -288,7 +324,7 @@ def compile(code):
     c, lits = getLiterals(code + " ")
     c = getVars(c)
     c = getOperators(c)
-    c, lits = getBrackets(lits, c)
+    #c, lits = getBrackets(lits, c)
     print(lits)
     c = split_lines(c)
     for i in c:
