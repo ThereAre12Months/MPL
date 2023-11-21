@@ -284,9 +284,11 @@ def getBrackets(literals:list, source:list|tuple):
 
             new_contents.append(new_c)
 
-        if type(new[start_pos-1]) == dt.Variable
-        new[start_pos:end_pos]
+        if type(new[start_pos-1]) == dt.Variable:
+            new[start_pos:end_pos]
 
+        lits.append(dt.List(new_contents))
+        new[start_pos:end_pos+1] = Reference(len(lits)-1)
         # l = []
         # 
         # if len(bracket) == 5:
@@ -320,11 +322,67 @@ def getBrackets(literals:list, source:list|tuple):
     # 
     #     other = new 
 
+def getLists(literals:list, source:list|tuple):
+    lits = literals.copy()
+    new  = source.copy()
+
+    length = len(source)
+
+    while "]" in new:
+        idx = new.index("]")
+
+        start_pos = 0
+        end_pos   = idx
+        current_pos = end_pos
+
+        while new[current_pos] != "[":
+            current_pos -= 1
+
+        start_pos = current_pos
+
+        bracket = new[start_pos:end_pos+1]
+
+        contents = []
+        temp = []
+
+        for char in bracket:
+            if char != ",":
+                temp.append(char)
+            else:
+                contents.append(trim_line(temp))
+        if trim_line(temp) != []:
+            contents.append(trim_line(temp))
+
+        new_contents = []
+        for c in contents:
+            new_c = []
+            count = 0
+
+            while count < len(c):
+                if type(c[count]) == Operator:
+                    new_c.append(cs.BinOp(c[count].t, c[count-1], c[count+1]))
+                    new_c.pop(-2)
+                    count += 1
+                else:
+                    new_c.append(c[count])
+                count += 1
+
+            new_contents.append(new_c)
+
+        if type(new[start_pos-1]) == dt.Variable:
+            new[start_pos:end_pos]
+
+        lits.append(dt.List(new_contents))
+        new[start_pos:end_pos+1] = [Reference(len(lits)-1)]
+
+    return new, lits
+
 def compile(code):
     c, lits = getLiterals(code + " ")
     c = getVars(c)
     c = getOperators(c)
     #c, lits = getBrackets(lits, c)
+    c, lits = getLists(lits, c)
     print(lits)
     c = split_lines(c)
     for i in c:

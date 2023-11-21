@@ -200,6 +200,30 @@ class Tuple:
     def _add(self, val):
         pass
 
+class List:
+    def __init__(self, items=None):
+        self.val = items or []
+
+    def __repr__(self):
+        val = []
+        for i in self.val:
+            print(i)
+            val.append(i)
+
+        return f"[{val}]"
+
+    def _copy(self):
+        return List(self.val)
+
+    def _toString(self):
+        return String(f"[{[i for i in self.val]}]")
+    
+    def _add(self, val):
+        if type(val) != List:
+            return NotImplemented
+        
+        return List(self.val + val.val)
+
 class Codeblock:
     def __init__(self, lines:list|tuple|None=None):
         self.lines = lines or []
