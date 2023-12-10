@@ -1,14 +1,18 @@
 from compiler2 import compile
 
-test = """
-let name = in("What's your name? ");
-out("Hi, " +  name + "!");
+# test = """
+# let name = in("What's your name? ");
+# out("Hi, " +  name + "!");
+# 
+# 
+# if (name == "Alfred") {
+#     out("Hi, Alfred!");
+# };
+# """
 
-let array = [1, 2, 3, 4];
+with open("fib.mpl", "r") as f:
+    test = f.read()
 
-if (name == "Alfred") {
-    out("Hi, Alfred!");
-};
-"""
+print(test)
 
 compile(test)

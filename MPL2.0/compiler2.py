@@ -383,7 +383,6 @@ def compile(code):
     c = getOperators(c)
     #c, lits = getBrackets(lits, c)
     c, lits = getLists(lits, c)
-    print(lits)
     c = split_lines(c)
     for i in c:
         print(i)
