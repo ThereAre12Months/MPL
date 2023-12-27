@@ -1,5 +1,6 @@
 import codeStructure as cs
 import datatypes as dt
+import time
 
 code = cs.Codeblock([
     cs.AddVar("local", dt.Variable("add"), dt.Function(
@@ -10,9 +11,25 @@ code = cs.Codeblock([
     cs.FunctionCall(dt.Variable("add"), [dt.Int(5), dt.Int(10)])
 ])
 
+perf = cs.Codeblock([
+    cs.AddVar("local", dt.Variable("a"), dt.Int(0)),
+    cs.Repeat(dt.Int(1000), cs.Codeblock([
+        cs.Repeat(dt.Int(1000), cs.Codeblock([
+            cs.SetVar(dt.Variable("a"), cs.BinOp("+", dt.Variable("a"), dt.Int(5))),
+            cs.SetVar(dt.Variable("a"), cs.BinOp("-", dt.Variable("a"), dt.Int(3))),
+            cs.SetVar(dt.Variable("a"), cs.BinOp("*", dt.Variable("a"), dt.Int(10))),
+            cs.SetVar(dt.Variable("a"), cs.BinOp("/", dt.Variable("a"), dt.Int(2))),
+        ]))
+    ]))
+])
+
 variables = dt.Vars()
 
-code._call(variables)
+st = time.time()
+perf._call(variables)
+et = time.time()
+
+print(f"\nFinished executing in {et-st} seconds!")
 
 # fn hello() {
 #   out("Hello, world!");

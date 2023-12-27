@@ -175,6 +175,15 @@ class If:
         if self.conditional._test(vars).val:
             self.code._call(vars)
 
+class Repeat:
+    def __init__(self, amount:Int|Variable, code:Codeblock):
+        self.amount = amount
+        self.code = code
+
+    def _call(self, vars:Vars):
+        for i in range(Tools.getGenericVal(self.amount, vars).val):
+            self.code._call(vars)
+
 class BuiltinFunctionCall:
     def __init__(self, name, args=None, kwargs=None):
         self.name = name
