@@ -9,6 +9,8 @@ if (a > 4) {
 };
 """)
 
+print(tokens)
+
 code = tempName(tokens)
 
 for l in code:
