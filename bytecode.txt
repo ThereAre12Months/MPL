@@ -1,0 +1,5 @@
+memory layout:
+
+jump command
+complex data
+actual code

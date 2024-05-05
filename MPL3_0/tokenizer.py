@@ -1,11 +1,13 @@
 class TOKENTYPES:
-    INT     = 0
-    FLOAT   = 1
-    STRING  = 2
-    LIST    = 3
-    KEYWORD = 4
-    SYMBOL  = 5
-    VARNAME = 6
+    INT       = 0
+    FLOAT     = 1
+    STRING    = 2
+    LIST      = 3
+    CODEBLOCK = 4
+    KEYWORD   = 5
+    BINOP     = 6
+    SYMBOL    = 7
+    VARNAME   = 8
 
 class Token:
     def __init__(self, __type:int=TOKENTYPES.INT, __value:any=None):
@@ -13,7 +15,7 @@ class Token:
         self.val  = __value
 
     def __str__(self):
-        return f"{['INT', 'FLOAT', 'STRING', 'LIST', 'KEYWORD', 'SYMBOL', 'VARNAME'][self.type]}: {self.val}"
+        return f"{['INT', 'FLOAT', 'STRING', 'LIST', 'CODEBLOCK', 'KEYWORD', 'BINOP', 'SYMBOL', 'VARNAME'][self.type]}: {self.val}"
 
     def __repr__(self):
         return str(self)
@@ -87,22 +89,6 @@ def tokenize(file:str) -> list[list[Token]]:
     )
 
     symbols = (
-        # maths
-        "+",
-        "-",
-        "*",
-        "/",
-        "**",
-        "%",
-
-        # boolean binary operators
-        "==",
-        "!=",
-        "<",
-        ">",
-        "<=",
-        ">=",
-
         # lexical symbols
         "(",
         ")",
@@ -115,6 +101,24 @@ def tokenize(file:str) -> list[list[Token]]:
         # variable stuff
         "=",
         ":=",
+    )
+
+    binops = (
+        # values
+        "+",
+        "-",
+        "*",
+        "/",
+        "**",
+        "%",
+
+        # boolean
+        "==",
+        "!=",
+        "<",
+        ">",
+        "<=",
+        ">=",
     )
 
     words = split(file, sep=list(" ,:;()[]{}\n\t\"'"), incl=True)
@@ -145,6 +149,9 @@ def tokenize(file:str) -> list[list[Token]]:
 
             elif word in symbols:
                 tokens.append(Token(TOKENTYPES.SYMBOL, word))
+
+            elif word in binops:
+                tokens.append(Token(TOKENTYPES.BINOP, word))
 
             elif isInt(word):
                 tokens.append(Token(TOKENTYPES.INT, word))
