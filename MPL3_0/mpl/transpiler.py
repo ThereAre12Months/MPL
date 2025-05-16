@@ -109,7 +109,6 @@ class LLVMBuilder:
     def generate_codeblock(self, builder:ir.IRBuilder, code:list):
         for line in code:
             if line["type"] == "call":
-                print("===lalalalala")
                 func_name = line["function"]
                 args = [self.generate_expression(arg) for arg in line["args"]]
                 func_ir = self.function_map.get(func_name)
@@ -162,16 +161,16 @@ class LLVMBuilder:
         llvm_module = llvm.parse_assembly(str(self.module))
         llvm_module.verify()
 
-        if self.optimize:
+        if self.optimize and False:
             pmb = llvm.create_pass_manager_builder()
             pmb.opt_level = 3
             pm = llvm.create_module_pass_manager()
             pmb.populate(pm)
             pm.run(llvm_module) 
 
-        target_machine = llvm.Target.from_default_triple().create_target_machine()
+        target_machine = llvm.Target.from_triple("amd64-pc-windows-msvc").create_target_machine(codemodel="small", reloc="default", opt=3)
 
-        return target_machine.emit_object(llvm_module)
+        return target_machine.emit_assembly(llvm_module)
 
 def generate_llvm(path:str=None, ast:dict=None):
     b = LLVMBuilder(path=path, ast=ast)

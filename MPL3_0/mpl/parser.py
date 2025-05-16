@@ -1,4 +1,4 @@
-from src.tokenizer import tokenize, Constant, Keyword, Identifier, Operator
+from .tokenizer import tokenize, Constant, Keyword, Identifier, Operator
 
 class GenericType:
     def __init__(self, type:str):
