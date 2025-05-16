@@ -42,7 +42,7 @@ def mpl_type_to_llvm_type(mpl_type):
             raise ValueError(f"Unknown type: {mpl_type}")        
 
 class LLVMBuilder:
-    def __init__(self, path:str=None, ast:dict=None):
+    def __init__(self, path:str|None=None, ast:dict|None=None):
         if path:
             with open(path, 'r') as file:
                 ast = json.load(file)
@@ -103,6 +103,10 @@ class LLVMBuilder:
                     return builder.sdiv(left, right)
                 elif op == "%":
                     return builder.srem(left, right)
+                
+                elif op in ("==", "!=", "<", "<=", ">", ">="):
+                    return builder.icmp_signed(op, left, right)
+                
                 else:
                     raise ValueError(f"Unknown operator: {op}")
 
@@ -110,7 +114,7 @@ class LLVMBuilder:
         for line in code:
             if line["type"] == "call":
                 func_name = line["function"]
-                args = [self.generate_expression(arg) for arg in line["args"]]
+                args = [self.generate_expression(builder, arg) for arg in line["args"]]
                 func_ir = self.function_map.get(func_name)
                 if func_ir:
                     temp = builder.call(func_ir, args, name=func_name)
@@ -123,6 +127,26 @@ class LLVMBuilder:
                     builder.ret(value)
                 else:
                     builder.ret_void()
+
+            elif line["type"] == "if":
+                condition = self.generate_expression(builder, line["condition"])
+                then_block = builder.append_basic_block(name="then")
+                else_block = builder.append_basic_block(name="else")
+                end_block = builder.append_basic_block(name="end")
+
+                builder.cbranch(condition, then_block, else_block)
+
+                builder.position_at_start(then_block)
+                self.generate_codeblock(builder, line["then_body"])
+                if not then_block.is_terminated:
+                    builder.branch(end_block)
+
+                builder.position_at_start(else_block)
+                self.generate_codeblock(builder, line["else_body"])
+                if not else_block.is_terminated:
+                    builder.branch(end_block)
+
+                builder.position_at_start(end_block)
             else:
                 raise ValueError(f"Unknown line type: {line['type']}")
 
@@ -161,7 +185,7 @@ class LLVMBuilder:
         llvm_module = llvm.parse_assembly(str(self.module))
         llvm_module.verify()
 
-        if self.optimize and False:
+        if self.optimize:
             pmb = llvm.create_pass_manager_builder()
             pmb.opt_level = 3
             pm = llvm.create_module_pass_manager()
@@ -172,6 +196,6 @@ class LLVMBuilder:
 
         return target_machine.emit_assembly(llvm_module)
 
-def generate_llvm(path:str=None, ast:dict=None):
+def generate_llvm(path:str|None=None, ast:dict|None=None):
     b = LLVMBuilder(path=path, ast=ast)
     return b.generate_code()

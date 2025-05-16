@@ -1,4 +1,5 @@
 from .tokenizer import tokenize, Constant, Keyword, Identifier, Operator
+from typing import Any
 
 class GenericType:
     def __init__(self, type:str):
@@ -43,109 +44,7 @@ class Variable:
             "name": self.name,
             "type": self.type.__json__()
         }
-
-class Expression:
-    def __init__(self):
-        ...
-
-    def __json__(self):
-        return {
-            "type": None,
-        }
-
-class Literal(Expression):
-    def __init__(self, type:GenericType, value:any):
-        self.type = type
-        self.value = value
-
-    def __json__(self):
-        return {
-            "type": "literal",
-            "literal_type": self.type.__json__(),
-            "value": self.value,
-        }
     
-class VariableReference(Expression):
-    def __init__(self, var:Variable):
-        self.var = var
-
-    def __json__(self):
-        return {
-            "type": "var",
-            "var_name": self.var.name,
-        }
-
-class MathOperation(Expression):
-    binary_ops = {"+", "-", "*", "/", "%", "**"}
-
-    def __init__(self, operator:Operator, left:Expression, right:Expression):
-        self.operator = operator
-        self.left = left
-        self.right = right
-
-    def __json__(self):
-        return {
-            "type": "binary_op" if self.operator.name in MathOperation.binary_ops else "unary_op",
-            "op": self.operator.name,
-            "left": self.left.__json__(),
-            "right": self.right.__json__(),
-        }
-
-class FunctionCall(Expression):
-    def __init__(self, name:str, args:list[Expression]):
-        self.name = name
-        self.args = args
-
-    def __json__(self):
-        return {
-            "type": "call",
-            "function": self.name,
-            "args": [arg.__json__() for arg in self.args],
-        }
-
-class Statement:
-    def __init__(self):
-        pass
-
-    def __json__(self):
-        return {
-            "type": None,
-        }
-    
-class VariableDeclaration(Statement):
-    def __init__(self, var: Variable, value: Expression):
-        self.var = var
-        self.value = value
-
-    def __json__(self):
-        return {
-            "type": "VariableDeclaration",
-            "var": self.var.__json__(),
-            "value": self.value.__json__(),
-        }
-    
-class VariableAssignment(Statement):
-    def __init__(self, var: Variable, value: Expression):
-        self.var = var
-        self.value = value
-
-    def __json__(self):
-        return {
-            "type": "VariableAssignment",
-            "var": self.var.__json__(),
-            "value": self.value.__json__(),
-        }
-
-class ReturnStatement(Statement):
-    def __init__(self, value: Expression):
-        self.value = value
-
-    def __json__(self):
-        return {
-            "type": "return",
-            "value": self.value.__json__(),
-        }
-
 class Codeblock:
     def __init__(self, local_vars: list[Identifier], code: list):
         self.local_vars = local_vars
@@ -171,6 +70,153 @@ class FunctionDefinition:
             "body": self.code.__json__(),
         }
 
+class Expression:
+    def __init__(self):
+        ...
+
+    def __json__(self):
+        return {
+            "type": None,
+        }
+
+class Literal(Expression):
+    def __init__(self, type:GenericType, value:Any):
+        self.type = type
+        self.value = value
+
+    def __json__(self):
+        return {
+            "type": "literal",
+            "literal_type": self.type.__json__(),
+            "value": self.value,
+        }
+    
+class VariableReference(Expression):
+    def __init__(self, var:Variable):
+        self.var = var
+
+    def __json__(self):
+        return {
+            "type": "var",
+            "var_name": self.var.name,
+        }
+
+class MathOperation(Expression):
+    binary_ops = {"+", "-", "*", "/", "%", "**"}
+
+    def __init__(self, operator:Operator, left:Expression, right:Expression|None):
+        self.operator = operator
+        self.left = left
+        self.right = right
+
+    def __json__(self):
+        if self.right:
+            return {
+                "type": "binary_op",
+                "op": self.operator.name,
+                "left": self.left.__json__(),
+                "right": self.right.__json__(),
+            }
+        
+        else:
+            return {
+                "type": "unary_op",
+                "op": self.operator.name,
+                "right": self.left.__json__(),
+            }
+
+class FunctionCall(Expression):
+    def __init__(self, name:str, args:list[Expression]):
+        self.name = name
+        self.args = args
+
+    def __json__(self):
+        return {
+            "type": "call",
+            "function": self.name,
+            "args": [arg.__json__() for arg in self.args],
+        }
+    
+class ArrayAccess(Expression):
+    def __init__(self, array:Expression, index:Expression):
+        self.array = array
+        self.index = index
+
+    def __json__(self):
+        return {
+            "type": "array_access",
+            "array": self.array.__json__(),
+            "index": self.index.__json__(),
+        }
+
+class Statement:
+    def __init__(self):
+        self.type = None
+
+    def __json__(self):
+        return {
+            "type": self.type,
+        }
+    
+class VariableDeclaration(Statement):
+    def __init__(self, var: Variable, value: Expression):
+        self.var = var
+        self.value = value
+
+    def __json__(self):
+        return {
+            "type": "VariableDeclaration",
+            "var": self.var.__json__(),
+            "value": self.value.__json__(),
+        }
+    
+class VariableAssignment(Statement):
+    def __init__(self, var: Variable, value: Expression):
+        self.type = "variable_assignment"
+        self.var = var
+        self.value = value
+
+    def __json__(self):
+        return {
+            "type": self.type,
+            "var": self.var.__json__(),
+            "value": self.value.__json__(),
+        }
+
+class ReturnStatement(Statement):
+    def __init__(self, value: Expression):
+        self.type = "return"
+        self.value = value
+
+    def __json__(self):
+        return {
+            "type": self.type,
+            "value": self.value.__json__(),
+        }
+    
+class IfStatement(Statement):
+    def __init__(self, condition: Expression, then_body: Codeblock, else_body:Codeblock|None = None):
+        self.type = "if"
+        self.condition = condition
+        self.then_body  = then_body
+        self.else_body  = else_body
+    
+
+    def __json__(self):
+        if self.else_body:
+            return {
+                "type": self.type,
+                "condition": self.condition.__json__(),
+                "then_body": self.then_body.__json__(),
+                "else_body": self.else_body.__json__(),
+            }
+        return {
+            "type": "if",
+            "condition": self.condition.__json__(),
+            "then_body": self.then_body.__json__(),
+            "else_body": [],
+        }
+
 class Code:
     def __init__(self, function_defs: list[FunctionDefinition]):
         self.function_defs = function_defs
@@ -190,8 +236,11 @@ class Code:
 def parse_shunting_yard(tokens:list):
     output = []
     op_stack = []
-    
-    for token_idx, token in enumerate(tokens):
+
+    token_idx = 0
+    while token_idx < len(tokens):
+        token = tokens[token_idx]
+
         if isinstance(token, Constant):
             if token_idx > 0 and not (isinstance(tokens[token_idx - 1], Operator) and tokens[token_idx - 1].name != ")"):
                 while op_stack and op_stack[-1].name != "(":
@@ -199,7 +248,8 @@ def parse_shunting_yard(tokens:list):
             output.append(token)
         elif isinstance(token, Identifier):
             if token_idx + 1 < len(tokens) and tokens[token_idx + 1] == Operator("("):
-                op_stack.append(Operator(token.name, precedence_override=float("inf")))
+                op_stack.append(Operator(token.name, precedence_override=1024))
+                args, token_idx = parse_function_args(tokens, token_idx+1)
             else:
                 if token_idx > 0 and not (isinstance(tokens[token_idx - 1], Operator) and tokens[token_idx - 1].name != ")"):
                     while op_stack and op_stack[-1].name != "(":
@@ -244,8 +294,8 @@ def parse_expression(tokens:list) -> Expression:
                     left = output_expression.pop()
                     output_expression.append(MathOperation(token, left, right))
                 elif token.name in Operator.UN_OPS:
-                    right = output_expression.pop()
-                    output_expression.append(MathOperation(token, None, right))
+                    left = output_expression.pop()
+                    output_expression.append(MathOperation(token, left, None))
             else:
                 right = output_expression.pop()
                 left = output_expression.pop()
@@ -253,15 +303,164 @@ def parse_expression(tokens:list) -> Expression:
 
     return output_expression[0]
 
+def parse_function_args(tokens:list, idx=0) -> tuple[list[Expression], int]:
+    args = []
+    while idx < len(tokens) and tokens[idx] != Operator(")"):
+        arg, idx = parse_func_arg_value(tokens, idx)
+        args.append(arg)
+
+    return args, idx
+
+operator_precedence = {
+    "==": 1,
+    "!=": 1,
+    "<": 1,
+    "<=": 1,
+    ">": 1,
+    ">=": 1,
+
+    "+": 2,
+    "-": 2,
+    "*": 3,
+    "/": 3,
+    "%": 3,
+    "**": 4,
+}
+
+operator_associativity = {
+    "==": "left",
+    "!=": "left",
+    "<": "left",
+    "<=": "left",
+    ">": "left",
+    ">=": "left",
+
+    "+": "left",
+    "-": "left",
+    "*": "left",
+    "/": "left",
+    "%": "left",
+    "**": "right",
+}
+
+def parse_postfix(tokens:list, idx, expr) -> tuple[Expression, int]:
+    while True:
+        token = tokens[idx]
+
+        if token == Operator("("):
+            idx += 1
+            args = []
+            if tokens[idx] != Operator(")"):
+                while True:
+                    arg, idx = parse_expression_experimental(tokens, idx)
+                    args.append(arg)
+                    if tokens[idx] == Operator(","):
+                        idx += 1
+                    else:
+                        break
+            
+            assert tokens[idx] == Operator(")"), "Expected ')' after function arguments"
+            expr = FunctionCall(expr.name, args)
+
+        elif token == Operator("["):
+            idx += 1
+            index, idx = parse_expression_experimental(tokens, idx)
+            assert tokens[idx] == Operator("]"), "Expected ']' after array index"
+            idx += 1
+            expr = ArrayAccess(expr, index)
+
+        else:
+            break
+
+    return expr, idx
+
+def parse_primary(tokens:list, idx=0) -> tuple[Expression, int]:
+    token = tokens[idx]
+    if isinstance(token, Constant):
+        expr = Literal(GenericType(token.type), token.value)
+    elif isinstance(token, Identifier):
+        expr = VariableReference(Variable(token.name, GenericType("var")))
+    elif isinstance(token, Operator):
+        if token.name == "(":
+            expr, idx = parse_expression_experimental(tokens, idx + 1)
+            assert tokens[idx] == Operator(")"), "Expected ')' after expression"
+            idx += 1
+        else:
+            raise ValueError(f"Unknown operator: {token.name}")
+        
+    return parse_postfix(tokens, idx, expr)
+
+def parse_expression_experimental(tokens:list, idx=0) -> tuple[Expression, int]:
+    left, idx = parse_primary(tokens, idx)
+    min_precedence = 0
+
+    while True:
+        token = tokens[idx]
+        is_actual_op = isinstance(token, Operator) and token.name in operator_precedence
+        if not is_actual_op or token.precedence < min_precedence:
+            break
+
+        op = token.name
+        precedence = operator_precedence[op]
+        idx += 1
+
+        min_precedence = precedence + 1 if operator_associativity[op] == "left" else precedence
+        right, idx = parse_expression_experimental(tokens, idx)
+
+        left = MathOperation(token, left, right)
+
+
+        print(f"left: {left}")
+
+    return left, idx
+
 def parse_value(tokens:list, idx=0) -> tuple[Expression, int]:
+    return parse_expression_experimental(tokens, idx)
+
     temp_tokens = []
-    while idx < len(tokens) and (tokens[idx] != Operator(";") or isinstance(tokens[idx], Keyword)):
+    prev_token:Any = None
+    while idx < len(tokens):
+        if tokens[idx] == Operator("(") and type(prev_token) == Identifier:
+            ...
+        elif type(tokens[idx]) in (Literal, Constant, Identifier) or tokens[idx] in (Operator("("), Operator("{")):
+            if type(prev_token) in (Literal, Constant, Identifier) or prev_token in (Operator(")"), Operator("}")):
+                break
+
+        if isinstance(tokens[idx], Keyword):
+            break
+
+        if tokens[idx] == Operator(";"):
+            break
+         
+        prev_token = tokens[idx]
         temp_tokens.append(tokens[idx])
         idx += 1
 
     math = parse_expression(temp_tokens)
+    return math, idx
 
-    return math, idx + 1
+def parse_func_arg_value(tokens:list, idx=0) -> tuple[Expression, int]:
+    temp_tokens = []
+    prev_token:Any = None
+    while idx < len(tokens):
+        if tokens[idx] == Operator("(") and type(prev_token) == Identifier:
+            ...
+        elif type(tokens[idx]) in (Literal, Constant, Identifier) or tokens[idx] in (Operator("("), Operator("{")):
+            if type(prev_token) in (Literal, Constant, Identifier) or prev_token in (Operator(")"), Operator("}")):
+                break
+
+        if isinstance(tokens[idx], Keyword):
+            break
+
+        if tokens[idx] == Operator(","):
+            break
+         
+        prev_token = tokens[idx]
+        temp_tokens.append(tokens[idx])
+        idx += 1
+
+    math = parse_expression(temp_tokens)
+    return math, idx
 
 def parse_function(tokens:list, idx=0):
     idx += 1
@@ -295,11 +494,14 @@ def parse_function(tokens:list, idx=0):
 
     return FunctionDefinition(name, arg_names, arg_types, return_type, codeblock), idx
 
-def parse_line(tokens: list, idx=0):
+def parse_line(tokens: list, idx=0) -> tuple[Statement|FunctionDefinition, int]:
     if idx >= len(tokens):
-        return None
+        return Statement(), idx
+    
+    if tokens[idx] == Operator(";"):
+        return Statement(), idx + 1
 
-    if tokens[idx] in (Keyword("bool"), Keyword("int"), Keyword("float"), Keyword("string")):
+    elif tokens[idx] in (Keyword("bool"), Keyword("int"), Keyword("float"), Keyword("string")):
         type:Keyword = tokens[idx]
         idx += 1
         identifier = tokens[idx]
@@ -327,9 +529,17 @@ def parse_line(tokens: list, idx=0):
             idx += 1
             value, idx = parse_value(tokens, idx)
             return ReturnStatement(value), idx
+        
+        if tokens[idx] == Keyword("if"):
+            idx += 1
+            cond, idx = parse_value(tokens, idx)
+            code, idx  = parse_codeblock(tokens, idx)
 
-    else:
-        raise ValueError(f"Unknown statement type: {tokens[idx]}")
+            return IfStatement(cond, code), idx
+
+            
+
+    raise ValueError(f"Unknown statement type: {tokens[idx]}")
 
 def parse_codeblock(tokens:list, idx=0):
     function_defs = []
@@ -345,7 +555,9 @@ def parse_codeblock(tokens:list, idx=0):
             local_vars.append(line.var)
         elif isinstance(line, FunctionDefinition):
             function_defs.append(line)
-        else:
+        elif isinstance(line, Statement):
+            if line.type == None:
+                continue
             code.append(line)
 
     return Codeblock(local_vars, code), idx + 1
